@@ -29,6 +29,8 @@ jobs:
       - name: Copy Files to Build Directory
         run: |
           echo Copy files to build directory running..
+          echo $GITHUB_WORKSPACE
+          cd $GITHUB_WORKSPACE
           mkdir ./build
           cp -r ./modules ./build/modules
           cp ./host.json ./build/host.json
