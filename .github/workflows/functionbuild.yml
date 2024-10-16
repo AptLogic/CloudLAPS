@@ -32,7 +32,7 @@ jobs:
           echo $GITHUB_WORKSPACE
           cd $GITHUB_WORKSPACE
           mkdir build
-          cp -r modules build/modules
+          cp -r "./Azure Functions/modules" build/modules
           cp host.json build/host.json
           cp profile.ps1 build/profile.ps1
           cp requirements.ps1 build/requirements.ps1
