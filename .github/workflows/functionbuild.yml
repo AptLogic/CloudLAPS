@@ -31,20 +31,20 @@ jobs:
           echo Copy files to build directory running..
           echo $GITHUB_WORKSPACE
           cd $GITHUB_WORKSPACE
-          mkdir ./build
-          cp -r ./modules ./build/modules
-          cp ./host.json ./build/host.json
-          cp ./profile.ps1 ./build/profile.ps1
-          cp ./requirements.ps1 ./build/requirements.ps1
-          cp -r ./SendClientEvent ./build/SendClientEvent
-          cp -r ./SetSecret ./build/SetSecret
-          cp -r ./MacEstablish ./build/MacEstablish
+          mkdir build
+          cp -r modules build/modules
+          cp host.json build/host.json
+          cp profile.ps1 build/profile.ps1
+          cp requirements.ps1 build/requirements.ps1
+          cp -r SendClientEvent build/SendClientEvent
+          cp -r SetSecret build/SetSecret
+          cp -r MacEstablish build/MacEstablish
 
       - name: Zip Build Files
         run: |
           echo Zip Build Files running...
           cd $GITHUB_WORKSPACE/build
-          zip -r ./function_artifact.zip ./*
+          zip -r function_artifact.zip *
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4.4.3
