@@ -6,5 +6,4 @@
     'Az.Accounts' = '2.*'
     'Az.KeyVault' = '4.*'
     'WPNinjas.PasswordGeneration' = '1.*'
-    'AADDeviceTrust.FunctionApp' = '1.*'
 }

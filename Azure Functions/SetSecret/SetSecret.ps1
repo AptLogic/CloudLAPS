@@ -105,133 +105,153 @@ foreach ($HeaderValidationItem in $HeaderValidationList) {
         }
     }  
 }
-
+$DebugLogging = $true
 if ($HeaderValidation -eq $true) {
     # Initiate request handling
     Write-Output -InputObject "Initiating request handling for device named as '$($DeviceName)' with identifier: $($DeviceID)"
 
     $AzureADDeviceRecord = Get-AzureADDeviceRecord -DeviceID $DeviceID -AuthToken $AuthToken
-    if ($AzureADDeviceRecord -ne $null) {
+    if ($null -ne $AzureADDeviceRecord) {
         Write-Output -InputObject "Found trusted Azure AD device record with object identifier: $($AzureADDeviceRecord.id)"
-
-        # Get required validation data for debug logging when enabled
-        if ($DebugLogging -eq $true) {
+        $SecIdExpDate = $AzureADDeviceRecord.extensionAttributes.extensionAttribute12
+        $SecIdIsValid = $false
+        $now = Get-Date
+        if($SecIdExpDate) {
+            try {
+                $SecIdExpDate = Get-Date $SecIdExpDate
+                if($SecIdExpDate -gt $now) {
+                    $SecIdIsValid = $true
+                }
+            } catch {
+                $SecIdIsValid = $false
+            }
+        }
+        # Get required validation data
+        if(($AzureADDeviceRecord.operatingSystem -eq "MacMDM") -and $SecIdIsValid) { # Special handling since macOS keys are stored differently
+            $AzureADDeviceAlternativeSecurityIds = Get-AzureADDeviceAlternativeSecurityIds -Key $AzureADDeviceRecord.extensionAttributes.extensionAttribute11
+        } else {
             $AzureADDeviceAlternativeSecurityIds = Get-AzureADDeviceAlternativeSecurityIds -Key $AzureADDeviceRecord.alternativeSecurityIds.key
         }
-
-        # Validate thumbprint from input request with Azure AD device record's alternativeSecurityIds details
-        if ($DebugLogging -eq $true) {
-            Write-Output -InputObject "ValidatePublicKeyThumbprint: Value from param 'Thumbprint': $($Thumbprint)"
-            Write-Output -InputObject "ValidatePublicKeyThumbprint: Value from AAD device record: $($AzureADDeviceAlternativeSecurityIds.Thumbprint)"
-        }
-        if (Test-AzureADDeviceAlternativeSecurityIds -AlternativeSecurityIdKey $AzureADDeviceRecord.alternativeSecurityIds.key -Type "Thumbprint" -Value $Thumbprint) {
-            Write-Output -InputObject "Successfully validated certificate thumbprint from inbound request"
-
-            # Validate public key hash from input request with Azure AD device record's alternativeSecurityIds details
+        
+        if(($AzureADDeviceRecord.operatingSystem -ne "MacMDM") -or $SecIdIsValid) {
+            # Validate thumbprint from input request with Azure AD device record's alternativeSecurityIds details
             if ($DebugLogging -eq $true) {
-                $ComputedHashString = New-HashString -Value $PublicKey
-                Write-Output -InputObject "ValidatePublicKeyHash: Encoded hash from param 'PublicKey': $($ComputedHashString)"
-                Write-Output -InputObject "ValidatePublicKeyHash: Encoded hash from AAD device record: $($AzureADDeviceAlternativeSecurityIds.PublicKeyHash)"
+                Write-Output -InputObject "ValidatePublicKeyThumbprint: Value from param 'Thumbprint': $($Thumbprint)"
+                Write-Output -InputObject "ValidatePublicKeyThumbprint: Value from AAD device record: $($AzureADDeviceAlternativeSecurityIds.Thumbprint)"
             }
-            if (Test-AzureADDeviceAlternativeSecurityIds -AlternativeSecurityIdKey $AzureADDeviceRecord.alternativeSecurityIds.key -Type "Hash" -Value $PublicKey) {
-                Write-Output -InputObject "Successfully validated certificate SHA256 hash value from inbound request"
+            if (Test-AzureADDeviceAlternativeSecurityIds -AlternativeSecurityIdKey $AzureADDeviceAlternativeSecurityIds.FullKey -Type "Thumbprint" -Value $Thumbprint) {
+                Write-Output -InputObject "Successfully validated certificate thumbprint from inbound request"
 
-                $EncryptionVerification = Test-Encryption -PublicKeyEncoded $PublicKey -Signature $Signature -Content $AzureADDeviceRecord.deviceId
-                if ($EncryptionVerification -eq $true) {
-                    Write-Output -InputObject "Successfully validated inbound request came from a trusted Azure AD device record"
+                # Validate public key hash from input request with Azure AD device record's alternativeSecurityIds details
+                if ($DebugLogging -eq $true) {
+                    $ComputedHashString = New-HashString -Value $PublicKey
+                    Write-Output -InputObject "ValidatePublicKeyHash: Encoded hash from param 'PublicKey': $($ComputedHashString)"
+                    Write-Output -InputObject "ValidatePublicKeyHash: Encoded hash from AAD device record: $($AzureADDeviceAlternativeSecurityIds.PublicKeyHash)"
+                }
+                if (Test-AzureADDeviceAlternativeSecurityIds -AlternativeSecurityIdKey $AzureADDeviceAlternativeSecurityIds.FullKey -Type "Hash" -Value $PublicKey) {
+                    Write-Output -InputObject "Successfully validated certificate SHA256 hash value from inbound request"
 
-                    # Validate that the inbound request came from a trusted device that's not disabled
-                    if ($AzureADDeviceRecord.accountEnabled -eq $true) {
-                        Write-Output -InputObject "Azure AD device record was validated as enabled"
+                    $EncryptionVerification = Test-Encryption -PublicKeyEncoded $PublicKey -Signature $Signature -Content $AzureADDeviceRecord.deviceId
+                    if ($EncryptionVerification -eq $true) {
+                        Write-Output -InputObject "Successfully validated inbound request came from a trusted Azure AD device record"
 
-                        # Determine parameter input variable to use for secret name
-                        switch ($Type) {
-                            "NonVM" {
-                                $SecretName = $SerialNumber
+                        # Validate that the inbound request came from a trusted device that's not disabled
+                        if ($AzureADDeviceRecord.accountEnabled -eq $true) {
+                            Write-Output -InputObject "Azure AD device record was validated as enabled"
+
+                            # Determine parameter input variable to use for secret name
+                            switch ($Type) {
+                                "NonVM" {
+                                    $SecretName = $SerialNumber
+                                }
+                                "VM" {
+                                    $SecretName = $DeviceName
+                                }
                             }
-                            "VM" {
-                                $SecretName = $DeviceName
-                            }
-                        }
-            
-                        # Validate that request to set or update key vault secret for provided secret name hasn't already been updated within the amount of days set in UpdateFrequencyDays application setting
-                        Write-Output -InputObject "Attempting to retrieve secret from vault with name: $($SecretName)"
-                        $KeyVaultSecretUpdateAllowed = $false
-                        $KeyVaultSecret = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $SecretName -ErrorAction SilentlyContinue
-                        if ($KeyVaultSecret -ne $null) {
-                            Write-Output -InputObject "Existing secret was last updated on (UTC): $(($KeyVaultSecret.Updated).ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss"))"
-                            if ($SecretUpdateOverride -eq $true) {
-                                $KeyVaultSecretUpdateAllowed = $true
-                            }
-                            else {
-                                if ((Get-Date).ToUniversalTime() -ge ($KeyVaultSecret.Updated).ToUniversalTime().AddDays($KeyVaultUpdateFrequencyDays)) {
+                
+                            # Validate that request to set or update key vault secret for provided secret name hasn't already been updated within the amount of days set in UpdateFrequencyDays application setting
+                            Write-Output -InputObject "Attempting to retrieve secret from vault with name: $($SecretName)"
+                            $KeyVaultSecretUpdateAllowed = $false
+                            $KeyVaultSecret = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $SecretName -ErrorAction SilentlyContinue
+                            if ($null -ne $KeyVaultSecret) {
+                                Write-Output -InputObject "Existing secret was last updated on (UTC): $(($KeyVaultSecret.Updated).ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss"))"
+                                if ($SecretUpdateOverride -eq $true) {
                                     $KeyVaultSecretUpdateAllowed = $true
                                 }
                                 else {
-                                    Write-Output -InputObject "Secret update will be allowed first after (UTC): $(($KeyVaultSecret.Updated).ToUniversalTime().AddDays($KeyVaultUpdateFrequencyDays).ToString("yyyy-MM-dd HH:mm:ss"))"
-                                    $KeyVaultSecretUpdateAllowed = $false
+                                    if ((Get-Date).ToUniversalTime() -ge ($KeyVaultSecret.Updated).ToUniversalTime().AddDays($KeyVaultUpdateFrequencyDays)) {
+                                        $KeyVaultSecretUpdateAllowed = $true
+                                    }
+                                    else {
+                                        Write-Output -InputObject "Secret update will be allowed first after (UTC): $(($KeyVaultSecret.Updated).ToUniversalTime().AddDays($KeyVaultUpdateFrequencyDays).ToString("yyyy-MM-dd HH:mm:ss"))"
+                                        $KeyVaultSecretUpdateAllowed = $false
+                                    }
                                 }
                             }
-                        }
-                        else {
-                            Write-Output -InputObject "Existing secret was not found, secret update will be allowed"
-                            $KeyVaultSecretUpdateAllowed = $true
-                        }
-            
-                        # Continue if update of existing secret was allowed or if new should be created
-                        if ($KeyVaultSecretUpdateAllowed -eq $true) {
-                            Write-Output -InputObject "Secret update is allowed, SecretUpdateOverride value is $($SecretUpdateOverride)"
-
-                            # Generate a random password
-                            $Password = Invoke-PasswordGeneration -Length $PasswordLength -AllowedCharacters $PasswordAllowedCharacters
-                            $SecretValue = ConvertTo-SecureString -String $Password -AsPlainText -Force
+                            else {
+                                Write-Output -InputObject "Existing secret was not found, secret update will be allowed"
+                                $KeyVaultSecretUpdateAllowed = $true
+                            }
                 
-                            # Construct hash-table for Tags property
-                            $Tags = @{
-                                "UserName" = $UserName
-                                "AzureADDeviceID" = $DeviceID
-                                "DeviceName" = $DeviceName
-                            }
+                            # Continue if update of existing secret was allowed or if new should be created
+                            if ($KeyVaultSecretUpdateAllowed -eq $true) {
+                                Write-Output -InputObject "Secret update is allowed, SecretUpdateOverride value is $($SecretUpdateOverride)"
 
-                            try {
-                                # Attempt to add secret to Key Vault
-                                Write-Output -InputObject "Attempting to commit secret with name '$($SecretName)' to vault"
-                                Set-AzKeyVaultSecret -VaultName $KeyVaultName -Name $SecretName -SecretValue $SecretValue -ContentType $ContentType -Tags $Tags -ErrorAction Stop
-                                Write-Output -InputObject "Successfully committed secret to vault"
-                                $Body = $Password
+                                # Generate a random password
+                                $Password = Invoke-PasswordGeneration -Length $PasswordLength -AllowedCharacters $PasswordAllowedCharacters
+                                $SecretValue = ConvertTo-SecureString -String $Password -AsPlainText -Force
+                    
+                                # Construct hash-table for Tags property
+                                $Tags = @{
+                                    "UserName" = $UserName
+                                    "AzureADDeviceID" = $DeviceID
+                                    "DeviceName" = $DeviceName
+                                }
+
+                                try {
+                                    # Attempt to add secret to Key Vault
+                                    Write-Output -InputObject "Attempting to commit secret with name '$($SecretName)' to vault"
+                                    Set-AzKeyVaultSecret -VaultName $KeyVaultName -Name $SecretName -SecretValue $SecretValue -ContentType $ContentType -Tags $Tags -ErrorAction Stop
+                                    Write-Output -InputObject "Successfully committed secret to vault"
+                                    $Body = $Password
+                                }
+                                catch [System.Exception] {
+                                    Write-Warning -Message "Failed to commit key vault secret. Error message: $($_.Exception.Message)"
+                                    $StatusCode = [HttpStatusCode]::BadRequest
+                                    $Body = "Failed to commit secret to key vault"
+                                }
                             }
-                            catch [System.Exception] {
-                                Write-Warning -Message "Failed to commit key vault secret. Error message: $($_.Exception.Message)"
-                                $StatusCode = [HttpStatusCode]::BadRequest
-                                $Body = "Failed to commit secret to key vault"
+                            else {
+                                $StatusCode = [HttpStatusCode]::Forbidden
+                                $Body = "Secret update not allowed"
                             }
                         }
                         else {
+                            Write-Output -InputObject "Trusted Azure AD device record validation for inbound request failed, record with deviceId '$($DeviceID)' is disabled"
                             $StatusCode = [HttpStatusCode]::Forbidden
-                            $Body = "Secret update not allowed"
+                            $Body = "Disabled device record"
                         }
                     }
                     else {
-                        Write-Output -InputObject "Trusted Azure AD device record validation for inbound request failed, record with deviceId '$($DeviceID)' is disabled"
+                        Write-Warning -Message "Trusted Azure AD device record validation for inbound request failed, could not validate signed content from client"
                         $StatusCode = [HttpStatusCode]::Forbidden
-                        $Body = "Disabled device record"
+                        $Body = "Untrusted request"
                     }
                 }
                 else {
-                    Write-Warning -Message "Trusted Azure AD device record validation for inbound request failed, could not validate signed content from client"
+                    Write-Warning -Message "Trusted Azure AD device record validation for inbound request failed, could not validate certificate SHA256 hash value"
                     $StatusCode = [HttpStatusCode]::Forbidden
                     $Body = "Untrusted request"
                 }
             }
             else {
-                Write-Warning -Message "Trusted Azure AD device record validation for inbound request failed, could not validate certificate SHA256 hash value"
+                Write-Warning -Message "Trusted Azure AD device record validation for inbound request failed, could not validate certificate thumbprint"
                 $StatusCode = [HttpStatusCode]::Forbidden
                 $Body = "Untrusted request"
             }
-        }
-        else {
-            Write-Warning -Message "Trusted Azure AD device record validation for inbound request failed, could not validate certificate thumbprint"
-            $StatusCode = [HttpStatusCode]::Forbidden
+        } else {
+            Write-Warning -Message "Trusted Azure AD device record validation for inbound request failed, security ID expired or null"
+            $StatusCode = 412
             $Body = "Untrusted request"
         }
     }

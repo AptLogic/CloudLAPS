@@ -215,9 +215,23 @@ if ($HeaderValidation -eq $true) {
     $AzureADDeviceRecord = Get-AzureADDeviceRecord -DeviceID $DeviceID -AuthToken $AuthToken
     if ($AzureADDeviceRecord -ne $null) {
         Write-Output -InputObject "Found trusted Azure AD device record with object identifier: $($AzureADDeviceRecord.id)"
-
-        # Get required validation data for debug logging when enabled
-        if ($DebugLogging -eq $true) {
+        $SecIdExpDate = $AzureADDeviceRecord.extensionAttributes.extensionAttribute12
+        $SecIdIsValid = $false
+        $now = Get-Date
+        if($SecIdExpDate) {
+            try {
+                $SecIdExpDate = Get-Date $SecIdExpDate
+                if($SecIdExpDate -gt $now) {
+                    $SecIdIsValid = $true
+                }
+            } catch {
+                $SecIdIsValid = $false
+            }
+        }
+        # Get required validation data
+        if(($AzureADDeviceRecord.operatingSystem -eq "MacMDM") -and $SecIdIsValid) { # Special handling since macOS keys are stored differently
+            $AzureADDeviceAlternativeSecurityIds = Get-AzureADDeviceAlternativeSecurityIds -Key $AzureADDeviceRecord.extensionAttributes.extensionAttribute11
+        } else {
             $AzureADDeviceAlternativeSecurityIds = Get-AzureADDeviceAlternativeSecurityIds -Key $AzureADDeviceRecord.alternativeSecurityIds.key
         }
 
