@@ -213,7 +213,7 @@ if ($HeaderValidation -eq $true) {
     Write-Output -InputObject "Initiating request handling for device named as '$($DeviceName)' with identifier: $($DeviceID)"
 
     $AzureADDeviceRecord = Get-AzureADDeviceRecord -DeviceID $DeviceID -AuthToken $AuthToken
-    if ($AzureADDeviceRecord -ne $null) {
+    if ($null -ne $AzureADDeviceRecord) {
         Write-Output -InputObject "Found trusted Azure AD device record with object identifier: $($AzureADDeviceRecord.id)"
         $SecIdExpDate = $AzureADDeviceRecord.extensionAttributes.extensionAttribute12
         $SecIdIsValid = $false
@@ -235,12 +235,13 @@ if ($HeaderValidation -eq $true) {
             $AzureADDeviceAlternativeSecurityIds = Get-AzureADDeviceAlternativeSecurityIds -Key $AzureADDeviceRecord.alternativeSecurityIds.key
         }
 
+        if(($AzureADDeviceRecord.operatingSystem -ne "MacMDM") -or $SecIdIsValid) {
         # Validate thumbprint from input request with Azure AD device record's alternativeSecurityIds details
         if ($DebugLogging -eq $true) {
             Write-Output -InputObject "ValidatePublicKeyThumbprint: Value from param 'Thumbprint': $($Thumbprint)"
             Write-Output -InputObject "ValidatePublicKeyThumbprint: Value from AAD device record: $($AzureADDeviceAlternativeSecurityIds.Thumbprint)"
         }
-        if (Test-AzureADDeviceAlternativeSecurityIds -AlternativeSecurityIdKey $AzureADDeviceRecord.alternativeSecurityIds.key -Type "Thumbprint" -Value $Thumbprint) {
+        if (Test-AzureADDeviceAlternativeSecurityIds -AlternativeSecurityIdKey $AzureADDeviceAlternativeSecurityIds.FullKey -Type "Thumbprint" -Value $Thumbprint) {
             Write-Output -InputObject "Successfully validated certificate thumbprint from inbound request"
 
             # Validate public key hash from input request with Azure AD device record's alternativeSecurityIds details
@@ -249,7 +250,7 @@ if ($HeaderValidation -eq $true) {
                 Write-Output -InputObject "ValidatePublicKeyHash: Encoded hash from param 'PublicKey': $($ComputedHashString)"
                 Write-Output -InputObject "ValidatePublicKeyHash: Encoded hash from AAD device record: $($AzureADDeviceAlternativeSecurityIds.PublicKeyHash)"
             }
-            if (Test-AzureADDeviceAlternativeSecurityIds -AlternativeSecurityIdKey $AzureADDeviceRecord.alternativeSecurityIds.key -Type "Hash" -Value $PublicKey) {
+            if (Test-AzureADDeviceAlternativeSecurityIds -AlternativeSecurityIdKey $AzureADDeviceAlternativeSecurityIds.FullKey -Type "Hash" -Value $PublicKey) {
                 Write-Output -InputObject "Successfully validated certificate SHA256 hash value from inbound request"
 
                 $EncryptionVerification = Test-Encryption -PublicKeyEncoded $PublicKey -Signature $Signature -Content $AzureADDeviceRecord.deviceId
@@ -291,6 +292,11 @@ if ($HeaderValidation -eq $true) {
             Write-Warning -Message "Trusted Azure AD device record validation for inbound request failed, could not validate certificate thumbprint"
             $StatusCode = [HttpStatusCode]::Forbidden
             $Body = "Untrusted request"
+        }
+    } else {
+        Write-Warning -Message "Trusted Azure AD device record validation for inbound request failed, security ID expired or null"
+        $StatusCode = 412
+        $Body = "Untrusted request"
         }
     }
     else {
