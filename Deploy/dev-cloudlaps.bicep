@@ -1,6 +1,6 @@
 extension microsoftGraphV1
 // Define parameters
-@description('Provide a unique name for the CloudLAPS Application Registration. This will be used to create a unique Application ID.')
+@description('Provide a unique name for the CloudLAPS Application. This will be used to name select other resources.')
 param ApplicationName string
 @description('Provide a name for the Function App that consists of alphanumerics. Name must be globally unique in Azure and cannot start or end with a hyphen.')
 param FunctionAppName string
@@ -23,23 +23,19 @@ param PortalWebAppName string
 ])
 @description('Select the desired App Service Plan for the system. Select B1, SKU for minimum cost. Recommended SKU for optimal performance and cost is S1.')
 param AppServicePlanSKU string = 'S1'
-@minLength(3)
-@maxLength(24)
-@description('Provide a name for the Key Vault. Name must be globally unique in Azure and between 3-24 characters, containing only 0-9, a-z, A-Z, and - characters.')
-param KeyVaultName string
-@description('Provide a name for the Log Analytics workspace.')
-param LogAnalyticsWorkspaceName string
 @description('Provide any tags required by your organization (optional)')
 param Tags object = {}
 
 // Define variables
+var KeyVaultName = '${toLower(ApplicationName)}-kv'
+var LogAnalyticsWorkspaceName = '${toLower(ApplicationName)}-la'
 var UniqueString = uniqueString(resourceGroup().id)
 var FunctionAppNameNoDash = replace(FunctionAppName, '-', '')
 var FunctionAppNameNoDashUnderScore = replace(FunctionAppNameNoDash, '_', '')
 var PortalWebAppNameNoDash = replace(PortalWebAppName, '-', '')
 var StorageAccountName = toLower('${take(FunctionAppNameNoDashUnderScore, 17)}${take(UniqueString, 5)}sa')
-var AppServicePlanName = '${FunctionAppName}-plan'
-var AppInsightsName = '${FunctionAppName}-ai'
+var AppServicePlanName = '${ApplicationName}-plan'
+var AppInsightsName = '${ApplicationName}-ai'
 var KeyVaultAppSettingsName = '${take(KeyVaultName, 21)}-as'
 var VirtualNetworkName string = '${FunctionAppName}-vn0'
 
@@ -137,7 +133,9 @@ resource AppServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
     name: AppServicePlanSKU
   }
   kind: 'linux'
-  properties: {}
+  properties: {
+    reserved: true
+  }
   tags: Tags
 }
 
@@ -377,7 +375,7 @@ resource FunctionAppZipDeploy 'Microsoft.Web/sites/extensions@2024-11-01' = {
     parent: FunctionApp
     name: 'ZipDeploy'
     properties: {
-        packageUri: 'https://github.com/MSEndpointMgr/CloudLAPS/releases/download/1.1.0/CloudLAPS-FunctionApp1.1.0.zip'
+        packageUri: 'https://github.com/AptLogic/CloudLAPS/releases/download/v1.3.0/CloudLAPS-FunctionApp1.3.0.zip'
     }
 }
 
@@ -386,7 +384,7 @@ resource PortalZipDeploy 'Microsoft.Web/sites/extensions@2024-11-01' = {
   parent: PortalApp
   name: 'ZipDeploy'
   properties: {
-      packageUri: 'https://github.com/MSEndpointMgr/CloudLAPS/releases/download/1.1.0/CloudLAPS-Portal1.1.0.zip'
+      packageUri: 'https://github.com/AptLogic/CloudLAPS/releases/download/v1.3.0/CloudLAPS-Portal1.1.0.zip'
   }
 }
 
