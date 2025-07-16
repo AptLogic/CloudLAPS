@@ -6,7 +6,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.36.177.2456",
-      "templateHash": "3007843056331136622"
+      "templateHash": "14223892218803270639"
     }
   },
   "parameters": {
@@ -66,7 +66,7 @@
   },
   "variables": {
     "KeyVaultName": "[format('{0}-kv', toLower(parameters('ApplicationName')))]",
-    "LogAnalyticsWorkspaceName": "[format('{0}-la', toLower(parameters('ApplicationName')))]",
+    "LogAnalyticsWorkspaceName": "[format('{0}-law', toLower(parameters('ApplicationName')))]",
     "UniqueString": "[uniqueString(resourceGroup().id)]",
     "FunctionAppNameNoDash": "[replace(parameters('FunctionAppName'), '-', '')]",
     "FunctionAppNameNoDashUnderScore": "[replace(variables('FunctionAppNameNoDash'), '_', '')]",
@@ -393,12 +393,12 @@
         "AzureWebJobsSecretStorageKeyVaultName": "[variables('KeyVaultName')]",
         "APPLICATIONINSIGHTS_CONNECTION_STRING": "[reference('AppInsights').ConnectionString]",
         "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference('AppInsights').InstrumentationKey]",
-        "AzureAd:TenantId": "[subscription().tenantId]",
-        "AzureAd:ClientId": "[parameters('AppRegistrationId')]",
-        "KeyVault:Uri": "[reference('KeyVault').vaultUri]",
-        "LogAnalytics:WorkspaceId": "[format('@Microsoft.KeyVault(VaultName={0};SecretName=LogAnalyticsWorkspaceId)', variables('KeyVaultAppSettingsName'))]",
-        "LogAnalytics:SharedKey": "[format('@Microsoft.KeyVault(VaultName={0};SecretName=LogAnalyticsWorkspaceSharedKey)', variables('KeyVaultAppSettingsName'))]",
-        "LogAnalytics:LogType": "CloudLAPSAudit"
+        "AzureAd__TenantId": "[subscription().tenantId]",
+        "AzureAd__ClientId": "[parameters('AppRegistrationId')]",
+        "KeyVault__Uri": "[reference('KeyVault').vaultUri]",
+        "LogAnalytics__WorkspaceId": "[format('@Microsoft.KeyVault(VaultName={0};SecretName=LogAnalyticsWorkspaceId)', variables('KeyVaultAppSettingsName'))]",
+        "LogAnalytics__SharedKey": "[format('@Microsoft.KeyVault(VaultName={0};SecretName=LogAnalyticsWorkspaceSharedKey)', variables('KeyVaultAppSettingsName'))]",
+        "LogAnalytics__LogType": "CloudLAPSAudit"
       },
       "dependsOn": [
         "AppInsights",
