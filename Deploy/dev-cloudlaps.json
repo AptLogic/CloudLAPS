@@ -6,14 +6,14 @@
     "_generator": {
       "name": "bicep",
       "version": "0.36.177.2456",
-      "templateHash": "1066450649001423888"
+      "templateHash": "9328561917102483836"
     }
   },
   "parameters": {
     "ApplicationName": {
       "type": "string",
       "metadata": {
-        "description": "Provide a unique name for the CloudLAPS Application Registration. This will be used to create a unique Application ID."
+        "description": "Provide a unique name for the CloudLAPS Application. This will be used to name select other resources."
       }
     },
     "FunctionAppName": {
@@ -50,20 +50,6 @@
         "description": "Select the desired App Service Plan for the system. Select B1, SKU for minimum cost. Recommended SKU for optimal performance and cost is S1."
       }
     },
-    "KeyVaultName": {
-      "type": "string",
-      "minLength": 3,
-      "maxLength": 24,
-      "metadata": {
-        "description": "Provide a name for the Key Vault. Name must be globally unique in Azure and between 3-24 characters, containing only 0-9, a-z, A-Z, and - characters."
-      }
-    },
-    "LogAnalyticsWorkspaceName": {
-      "type": "string",
-      "metadata": {
-        "description": "Provide a name for the Log Analytics workspace."
-      }
-    },
     "Tags": {
       "type": "object",
       "defaultValue": {},
@@ -73,14 +59,16 @@
     }
   },
   "variables": {
+    "KeyVaultName": "[format('{0}-kv', toLower(parameters('ApplicationName')))]",
+    "LogAnalyticsWorkspaceName": "[format('{0}-la', toLower(parameters('ApplicationName')))]",
     "UniqueString": "[uniqueString(resourceGroup().id)]",
     "FunctionAppNameNoDash": "[replace(parameters('FunctionAppName'), '-', '')]",
     "FunctionAppNameNoDashUnderScore": "[replace(variables('FunctionAppNameNoDash'), '_', '')]",
     "PortalWebAppNameNoDash": "[replace(parameters('PortalWebAppName'), '-', '')]",
     "StorageAccountName": "[toLower(format('{0}{1}sa', take(variables('FunctionAppNameNoDashUnderScore'), 17), take(variables('UniqueString'), 5)))]",
-    "AppServicePlanName": "[format('{0}-plan', parameters('FunctionAppName'))]",
-    "AppInsightsName": "[format('{0}-ai', parameters('FunctionAppName'))]",
-    "KeyVaultAppSettingsName": "[format('{0}-as', take(parameters('KeyVaultName'), 21))]",
+    "AppServicePlanName": "[format('{0}-plan', parameters('ApplicationName'))]",
+    "AppInsightsName": "[format('{0}-ai', parameters('ApplicationName'))]",
+    "KeyVaultAppSettingsName": "[format('{0}-as', take(variables('KeyVaultName'), 21))]",
     "VirtualNetworkName": "[format('{0}-vn0', parameters('FunctionAppName'))]"
   },
   "imports": {
@@ -190,7 +178,9 @@
         "name": "[parameters('AppServicePlanSKU')]"
       },
       "kind": "linux",
-      "properties": {},
+      "properties": {
+        "reserved": true
+      },
       "tags": "[parameters('Tags')]"
     },
     "FunctionApp": {
@@ -294,7 +284,7 @@
         "netFrameworkVersion": "v4.0",
         "linuxFxVersion": "DOTNETCORE|8.0",
         "alwaysOn": true,
-        "AzureWebJobsSecretStorageKeyVaultName": "[parameters('KeyVaultName')]",
+        "AzureWebJobsSecretStorageKeyVaultName": "[variables('KeyVaultName')]",
         "APPLICATIONINSIGHTS_CONNECTION_STRING": "[reference('AppInsights').ConnectionString]",
         "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference('AppInsights').InstrumentationKey]",
         "AzureAd:TenantId": "[subscription().tenantId]",
@@ -315,7 +305,7 @@
     "KeyVault": {
       "type": "Microsoft.KeyVault/vaults",
       "apiVersion": "2022-07-01",
-      "name": "[parameters('KeyVaultName')]",
+      "name": "[variables('KeyVaultName')]",
       "location": "[resourceGroup().location]",
       "properties": {
         "enabledForDeployment": false,
@@ -411,7 +401,7 @@
         "APPLICATIONINSIGHTS_CONNECTION_STRING": "[reference('AppInsights').ConnectionString]",
         "FUNCTIONS_WORKER_RUNTIME": "powershell",
         "UpdateFrequencyDays": "3",
-        "KeyVaultName": "[parameters('KeyVaultName')]",
+        "KeyVaultName": "[variables('KeyVaultName')]",
         "DebugLogging": "False",
         "PasswordLength": "16",
         "PasswordAllowedCharacters": "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz.:;,-_!?$%*=+&<>@#()23456789",
@@ -431,7 +421,7 @@
       "apiVersion": "2022-03-01",
       "name": "[format('{0}/{1}', variables('PortalWebAppNameNoDash'), 'appsettings')]",
       "properties": {
-        "AzureWebJobsSecretStorageKeyVaultName": "[parameters('KeyVaultName')]",
+        "AzureWebJobsSecretStorageKeyVaultName": "[variables('KeyVaultName')]",
         "APPLICATIONINSIGHTS_CONNECTION_STRING": "[reference('AppInsights').ConnectionString]",
         "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference('AppInsights').InstrumentationKey]",
         "AzureAd:TenantId": "[subscription().tenantId]",
@@ -454,7 +444,7 @@
       "apiVersion": "2024-11-01",
       "name": "[format('{0}/{1}', parameters('FunctionAppName'), 'ZipDeploy')]",
       "properties": {
-        "packageUri": "https://github.com/MSEndpointMgr/CloudLAPS/releases/download/1.1.0/CloudLAPS-FunctionApp1.1.0.zip"
+        "packageUri": "https://github.com/AptLogic/CloudLAPS/releases/download/v1.3.0/CloudLAPS-FunctionApp1.3.0.zip"
       },
       "dependsOn": [
         "FunctionApp"
@@ -465,7 +455,7 @@
       "apiVersion": "2024-11-01",
       "name": "[format('{0}/{1}', variables('PortalWebAppNameNoDash'), 'ZipDeploy')]",
       "properties": {
-        "packageUri": "https://github.com/MSEndpointMgr/CloudLAPS/releases/download/1.1.0/CloudLAPS-Portal1.1.0.zip"
+        "packageUri": "https://github.com/AptLogic/CloudLAPS/releases/download/v1.3.0/CloudLAPS-Portal1.1.0.zip"
       },
       "dependsOn": [
         "PortalApp"
@@ -474,7 +464,7 @@
     "LogAnalyticsWorkspace": {
       "type": "Microsoft.OperationalInsights/workspaces",
       "apiVersion": "2021-06-01",
-      "name": "[parameters('LogAnalyticsWorkspaceName')]",
+      "name": "[variables('LogAnalyticsWorkspaceName')]",
       "location": "[resourceGroup().location]",
       "properties": {
         "sku": {
