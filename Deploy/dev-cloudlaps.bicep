@@ -29,7 +29,7 @@ param Tags object = {}
 
 // Define variables
 var KeyVaultName = '${toLower(ApplicationName)}-kv'
-var LogAnalyticsWorkspaceName = '${toLower(ApplicationName)}-la'
+var LogAnalyticsWorkspaceName = '${toLower(ApplicationName)}-law'
 var UniqueString = uniqueString(resourceGroup().id)
 var FunctionAppNameNoDash = replace(FunctionAppName, '-', '')
 var FunctionAppNameNoDashUnderScore = replace(FunctionAppNameNoDash, '_', '')
@@ -332,12 +332,12 @@ resource PortalAppServiceAppSettings 'Microsoft.Web/sites/config@2022-03-01' = {
       AzureWebJobsSecretStorageKeyVaultName: KeyVault.name
       APPLICATIONINSIGHTS_CONNECTION_STRING: AppInsights.properties.ConnectionString
       APPINSIGHTS_INSTRUMENTATIONKEY: AppInsights.properties.InstrumentationKey
-      'AzureAd:TenantId': subscription().tenantId
-      'AzureAd:ClientId': AppRegistrationId
-      'KeyVault:Uri': KeyVault.properties.vaultUri
-      'LogAnalytics:WorkspaceId': '@Microsoft.KeyVault(VaultName=${KeyVaultAppSettingsName};SecretName=LogAnalyticsWorkspaceId)'
-      'LogAnalytics:SharedKey': '@Microsoft.KeyVault(VaultName=${KeyVaultAppSettingsName};SecretName=LogAnalyticsWorkspaceSharedKey)'
-      'LogAnalytics:LogType': 'CloudLAPSAudit'
+      AzureAd__TenantId: subscription().tenantId
+      AzureAd__ClientId: AppRegistrationId
+      KeyVault__Uri: KeyVault.properties.vaultUri
+      LogAnalytics__WorkspaceId: '@Microsoft.KeyVault(VaultName=${KeyVaultAppSettingsName};SecretName=LogAnalyticsWorkspaceId)'
+      LogAnalytics__SharedKey: '@Microsoft.KeyVault(VaultName=${KeyVaultAppSettingsName};SecretName=LogAnalyticsWorkspaceSharedKey)'
+      LogAnalytics__LogType: 'CloudLAPSAudit'
   }
   dependsOn: [
     PortalZipDeploy
