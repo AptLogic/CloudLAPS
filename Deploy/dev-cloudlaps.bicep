@@ -214,15 +214,6 @@ resource PortalAppConfig 'Microsoft.Web/sites/config@2024-04-01' = {
     netFrameworkVersion: 'v4.0'
     linuxFxVersion: 'DOTNETCORE|8.0'
     alwaysOn: true
-    AzureWebJobsSecretStorageKeyVaultName: KeyVault.name
-    APPLICATIONINSIGHTS_CONNECTION_STRING: AppInsights.properties.ConnectionString
-    APPINSIGHTS_INSTRUMENTATIONKEY: AppInsights.properties.InstrumentationKey
-    'AzureAd:TenantId': subscription().tenantId
-    'AzureAd:ClientId': AppRegistrationId
-    'KeyVault:Uri': KeyVault.properties.vaultUri
-    'LogAnalytics:WorkspaceId': '@Microsoft.KeyVault(VaultName=${KeyVaultAppSettingsName};SecretName=LogAnalyticsWorkspaceId)'
-    'LogAnalytics:SharedKey': '@Microsoft.KeyVault(VaultName=${KeyVaultAppSettingsName};SecretName=LogAnalyticsWorkspaceSharedKey)'
-    'LogAnalytics:LogType': 'CloudLAPSAudit'
   }
   dependsOn: [
     PortalZipDeploy

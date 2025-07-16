@@ -6,7 +6,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.36.177.2456",
-      "templateHash": "13365673130315919291"
+      "templateHash": "3007843056331136622"
     }
   },
   "parameters": {
@@ -264,20 +264,9 @@
       "properties": {
         "netFrameworkVersion": "v4.0",
         "linuxFxVersion": "DOTNETCORE|8.0",
-        "alwaysOn": true,
-        "AzureWebJobsSecretStorageKeyVaultName": "[variables('KeyVaultName')]",
-        "APPLICATIONINSIGHTS_CONNECTION_STRING": "[reference('AppInsights').ConnectionString]",
-        "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference('AppInsights').InstrumentationKey]",
-        "AzureAd:TenantId": "[subscription().tenantId]",
-        "AzureAd:ClientId": "[parameters('AppRegistrationId')]",
-        "KeyVault:Uri": "[reference('KeyVault').vaultUri]",
-        "LogAnalytics:WorkspaceId": "[format('@Microsoft.KeyVault(VaultName={0};SecretName=LogAnalyticsWorkspaceId)', variables('KeyVaultAppSettingsName'))]",
-        "LogAnalytics:SharedKey": "[format('@Microsoft.KeyVault(VaultName={0};SecretName=LogAnalyticsWorkspaceSharedKey)', variables('KeyVaultAppSettingsName'))]",
-        "LogAnalytics:LogType": "CloudLAPSAudit"
+        "alwaysOn": true
       },
       "dependsOn": [
-        "AppInsights",
-        "KeyVault",
         "PortalApp",
         "PortalZipDeploy"
       ]
