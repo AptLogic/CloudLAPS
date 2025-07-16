@@ -347,18 +347,20 @@ resource PortalAppServiceAppSettings 'Microsoft.Web/sites/config@2022-03-01' = {
 // Add ZipDeploy for Function App
 resource FunctionAppZipDeploy 'Microsoft.Web/sites/extensions@2024-11-01' = {
     parent: FunctionApp
-    name: 'ZipDeploy'
+    name: 'onedeploy'
     properties: {
         packageUri: 'https://github.com/AptLogic/CloudLAPS/releases/download/v1.3.0/CloudLAPS-FunctionApp1.3.0.zip'
+        type: 'zip'
     }
 }
 
 // Add ZipDeploy for CloudLAPS Portal
 resource PortalZipDeploy 'Microsoft.Web/sites/extensions@2024-11-01' = {
   parent: PortalApp
-  name: 'ZipDeploy'
+  name: 'onedeploy'
   properties: {
       packageUri: 'https://github.com/AptLogic/CloudLAPS/releases/download/v1.3.0/CloudLAPS-Portal1.1.0.zip'
+      type: 'zip'
   }
   dependsOn: [
     FunctionAppZipDeploy
