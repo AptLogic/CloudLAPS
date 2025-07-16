@@ -6,7 +6,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.36.177.2456",
-      "templateHash": "14223892218803270639"
+      "templateHash": "17220238035096801593"
     }
   },
   "parameters": {
@@ -426,6 +426,7 @@
         "packageUri": "https://github.com/AptLogic/CloudLAPS/releases/download/v1.3.0/CloudLAPS-Portal1.1.0.zip"
       },
       "dependsOn": [
+        "FunctionAppZipDeploy",
         "PortalApp"
       ]
     },

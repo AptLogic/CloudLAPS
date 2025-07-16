@@ -360,6 +360,9 @@ resource PortalZipDeploy 'Microsoft.Web/sites/extensions@2024-11-01' = {
   properties: {
       packageUri: 'https://github.com/AptLogic/CloudLAPS/releases/download/v1.3.0/CloudLAPS-Portal1.1.0.zip'
   }
+  dependsOn: [
+    FunctionAppZipDeploy
+  ]
 }
 
 // Create Log Analytics workspace
