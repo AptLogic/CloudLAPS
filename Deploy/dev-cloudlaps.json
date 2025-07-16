@@ -1,12 +1,12 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-  "languageVersion": "2.1-experimental",
+  "languageVersion": "2.0",
   "contentVersion": "1.0.0.0",
   "metadata": {
     "_generator": {
       "name": "bicep",
       "version": "0.36.177.2456",
-      "templateHash": "9328561917102483836"
+      "templateHash": "13365673130315919291"
     }
   },
   "parameters": {
@@ -14,6 +14,12 @@
       "type": "string",
       "metadata": {
         "description": "Provide a unique name for the CloudLAPS Application. This will be used to name select other resources."
+      }
+    },
+    "AppRegistrationId": {
+      "type": "string",
+      "metadata": {
+        "description": "Provide the unique ID for the CloudLAPS App Registration."
       }
     },
     "FunctionAppName": {
@@ -71,31 +77,7 @@
     "KeyVaultAppSettingsName": "[format('{0}-as', take(variables('KeyVaultName'), 21))]",
     "VirtualNetworkName": "[format('{0}-vn0', parameters('FunctionAppName'))]"
   },
-  "imports": {
-    "microsoftGraphV1": {
-      "provider": "MicrosoftGraph",
-      "version": "0.2.0-preview"
-    }
-  },
   "resources": {
-    "AppRegistration": {
-      "import": "microsoftGraphV1",
-      "type": "Microsoft.Graph/applications@v1.0",
-      "properties": {
-        "uniqueName": "[parameters('ApplicationName')]",
-        "displayName": "CloudLAPS",
-        "web": {
-          "redirectUris": [
-            "[format('https://{0}.azurewebsites.net/signin-oidc', variables('PortalWebAppNameNoDash'))]"
-          ],
-          "logoutUrl": "[format('https://{0}.azurewebsites.net/signout-oidc', variables('PortalWebAppNameNoDash'))]",
-          "implicitGrantSettings": {
-            "enableAccessTokenIssuance": false,
-            "enableIdTokenIssuance": true
-          }
-        }
-      }
-    },
     "AppInsights": {
       "type": "Microsoft.Insights/components",
       "apiVersion": "2020-02-02",
@@ -272,7 +254,6 @@
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('AppServicePlanName'))]"
       },
       "dependsOn": [
-        "AppRegistration",
         "AppServicePlan"
       ]
     },
@@ -288,7 +269,7 @@
         "APPLICATIONINSIGHTS_CONNECTION_STRING": "[reference('AppInsights').ConnectionString]",
         "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference('AppInsights').InstrumentationKey]",
         "AzureAd:TenantId": "[subscription().tenantId]",
-        "AzureAd:ClientId": "[reference('AppRegistration').properties.appId]",
+        "AzureAd:ClientId": "[parameters('AppRegistrationId')]",
         "KeyVault:Uri": "[reference('KeyVault').vaultUri]",
         "LogAnalytics:WorkspaceId": "[format('@Microsoft.KeyVault(VaultName={0};SecretName=LogAnalyticsWorkspaceId)', variables('KeyVaultAppSettingsName'))]",
         "LogAnalytics:SharedKey": "[format('@Microsoft.KeyVault(VaultName={0};SecretName=LogAnalyticsWorkspaceSharedKey)', variables('KeyVaultAppSettingsName'))]",
@@ -296,7 +277,6 @@
       },
       "dependsOn": [
         "AppInsights",
-        "AppRegistration",
         "KeyVault",
         "PortalApp",
         "PortalZipDeploy"
@@ -425,7 +405,7 @@
         "APPLICATIONINSIGHTS_CONNECTION_STRING": "[reference('AppInsights').ConnectionString]",
         "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference('AppInsights').InstrumentationKey]",
         "AzureAd:TenantId": "[subscription().tenantId]",
-        "AzureAd:ClientId": "[reference('AppRegistration').properties.appId]",
+        "AzureAd:ClientId": "[parameters('AppRegistrationId')]",
         "KeyVault:Uri": "[reference('KeyVault').vaultUri]",
         "LogAnalytics:WorkspaceId": "[format('@Microsoft.KeyVault(VaultName={0};SecretName=LogAnalyticsWorkspaceId)', variables('KeyVaultAppSettingsName'))]",
         "LogAnalytics:SharedKey": "[format('@Microsoft.KeyVault(VaultName={0};SecretName=LogAnalyticsWorkspaceSharedKey)', variables('KeyVaultAppSettingsName'))]",
@@ -433,7 +413,6 @@
       },
       "dependsOn": [
         "AppInsights",
-        "AppRegistration",
         "KeyVault",
         "PortalApp",
         "PortalZipDeploy"

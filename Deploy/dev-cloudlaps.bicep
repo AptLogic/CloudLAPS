@@ -1,7 +1,8 @@
-extension microsoftGraphV1
 // Define parameters
 @description('Provide a unique name for the CloudLAPS Application. This will be used to name select other resources.')
 param ApplicationName string
+@description('Provide the unique ID for the CloudLAPS App Registration.')
+param AppRegistrationId string
 @description('Provide a name for the Function App that consists of alphanumerics. Name must be globally unique in Azure and cannot start or end with a hyphen.')
 param FunctionAppName string
 @description('Provide a name for the portal website that consists of alphanumerics. Name must be globally unique in Azure and cannot start or end with a hyphen.')
@@ -38,21 +39,6 @@ var AppServicePlanName = '${ApplicationName}-plan'
 var AppInsightsName = '${ApplicationName}-ai'
 var KeyVaultAppSettingsName = '${take(KeyVaultName, 21)}-as'
 var VirtualNetworkName string = '${FunctionAppName}-vn0'
-
-resource AppRegistration 'Microsoft.Graph/applications@v1.0' = {
-  uniqueName: ApplicationName
-  displayName: 'CloudLAPS'
-  web: {
-    redirectUris: [
-      'https://${PortalWebAppNameNoDash}.azurewebsites.net/signin-oidc'
-    ]
-    logoutUrl: 'https://${PortalWebAppNameNoDash}.azurewebsites.net/signout-oidc'
-    implicitGrantSettings: {
-      enableAccessTokenIssuance: false
-      enableIdTokenIssuance: true
-    }
-  }
-}
 
 resource AppInsights 'microsoft.insights/components@2020-02-02' = {
   name: AppInsightsName
@@ -219,9 +205,6 @@ resource PortalApp 'Microsoft.Web/sites@2024-04-01' = {
   properties: {
     serverFarmId: AppServicePlan.id
   }
-  dependsOn: [
-    AppRegistration
-  ]
 }
 
 resource PortalAppConfig 'Microsoft.Web/sites/config@2024-04-01' = {
@@ -235,7 +218,7 @@ resource PortalAppConfig 'Microsoft.Web/sites/config@2024-04-01' = {
     APPLICATIONINSIGHTS_CONNECTION_STRING: AppInsights.properties.ConnectionString
     APPINSIGHTS_INSTRUMENTATIONKEY: AppInsights.properties.InstrumentationKey
     'AzureAd:TenantId': subscription().tenantId
-    'AzureAd:ClientId': AppRegistration.properties.appId
+    'AzureAd:ClientId': AppRegistrationId
     'KeyVault:Uri': KeyVault.properties.vaultUri
     'LogAnalytics:WorkspaceId': '@Microsoft.KeyVault(VaultName=${KeyVaultAppSettingsName};SecretName=LogAnalyticsWorkspaceId)'
     'LogAnalytics:SharedKey': '@Microsoft.KeyVault(VaultName=${KeyVaultAppSettingsName};SecretName=LogAnalyticsWorkspaceSharedKey)'
@@ -359,7 +342,7 @@ resource PortalAppServiceAppSettings 'Microsoft.Web/sites/config@2022-03-01' = {
       APPLICATIONINSIGHTS_CONNECTION_STRING: AppInsights.properties.ConnectionString
       APPINSIGHTS_INSTRUMENTATIONKEY: AppInsights.properties.InstrumentationKey
       'AzureAd:TenantId': subscription().tenantId
-      'AzureAd:ClientId': AppRegistration.properties.appId
+      'AzureAd:ClientId': AppRegistrationId
       'KeyVault:Uri': KeyVault.properties.vaultUri
       'LogAnalytics:WorkspaceId': '@Microsoft.KeyVault(VaultName=${KeyVaultAppSettingsName};SecretName=LogAnalyticsWorkspaceId)'
       'LogAnalytics:SharedKey': '@Microsoft.KeyVault(VaultName=${KeyVaultAppSettingsName};SecretName=LogAnalyticsWorkspaceSharedKey)'
