@@ -6,7 +6,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.36.177.2456",
-      "templateHash": "14677591614429255222"
+      "templateHash": "13668727602690444606"
     }
   },
   "parameters": {
@@ -67,28 +67,17 @@
   "variables": {
     "KeyVaultName": "[format('{0}-kv', toLower(parameters('ApplicationName')))]",
     "LogAnalyticsWorkspaceName": "[format('{0}-law', toLower(parameters('ApplicationName')))]",
-    "UniqueString": "[uniqueString(resourceGroup().id)]",
     "FunctionAppNameNoDash": "[replace(parameters('FunctionAppName'), '-', '')]",
     "FunctionAppNameNoDashUnderScore": "[replace(variables('FunctionAppNameNoDash'), '_', '')]",
     "PortalWebAppNameNoDash": "[replace(parameters('PortalWebAppName'), '-', '')]",
-    "StorageAccountName": "[toLower(format('{0}{1}sa', take(variables('FunctionAppNameNoDashUnderScore'), 17), take(variables('UniqueString'), 5)))]",
+    "StorageAccountName": "[toLower(format('{0}-sa', take(variables('FunctionAppNameNoDashUnderScore'), 17)))]",
     "AppServicePlanName": "[format('{0}-plan', parameters('ApplicationName'))]",
-    "AppInsightsName": "[format('{0}-ai', parameters('ApplicationName'))]",
+    "FunctionAppInsightsName": "[format('{0}-fa-ai', parameters('ApplicationName'))]",
+    "PortalAppInsightsName": "[format('{0}-wa-ai', parameters('ApplicationName'))]",
     "KeyVaultAppSettingsName": "[format('{0}-as', take(variables('KeyVaultName'), 21))]",
-    "VirtualNetworkName": "[format('{0}-vn0', parameters('FunctionAppName'))]"
+    "VirtualNetworkName": "[format('{0}-vnet', parameters('FunctionAppName'))]"
   },
   "resources": {
-    "AppInsights": {
-      "type": "Microsoft.Insights/components",
-      "apiVersion": "2020-02-02",
-      "name": "[variables('AppInsightsName')]",
-      "location": "[resourceGroup().location]",
-      "kind": "web",
-      "tags": "[union(parameters('Tags'), createObject(format('hidden-link:{0}', resourceId('Microsoft.Web/sites', parameters('PortalWebAppName'))), 'Resource'))]",
-      "properties": {
-        "Application_Type": "web"
-      }
-    },
     "VirtualNetwork": {
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "2024-05-01",
@@ -165,6 +154,17 @@
       },
       "tags": "[parameters('Tags')]"
     },
+    "FunctionAppInsightsComponents": {
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02",
+      "name": "[variables('FunctionAppInsightsName')]",
+      "location": "[resourceGroup().location]",
+      "kind": "web",
+      "properties": {
+        "Application_Type": "web"
+      },
+      "tags": "[union(parameters('Tags'), createObject(format('hidden-link:{0}', resourceId('Microsoft.Web/sites', variables('FunctionAppInsightsName'))), 'Resource'))]"
+    },
     "FunctionApp": {
       "type": "Microsoft.Web/sites",
       "apiVersion": "2024-04-01",
@@ -222,11 +222,11 @@
             },
             {
               "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-              "value": "[reference('AppInsights').InstrumentationKey]"
+              "value": "[reference('FunctionAppInsightsComponents').InstrumentationKey]"
             },
             {
               "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
-              "value": "[reference('AppInsights').ConnectionString]"
+              "value": "[reference('FunctionAppInsightsComponents').ConnectionString]"
             },
             {
               "name": "FUNCTIONS_WORKER_RUNTIME",
@@ -236,8 +236,8 @@
         }
       },
       "dependsOn": [
-        "AppInsights",
         "AppServicePlan",
+        "FunctionAppInsightsComponents",
         "StorageAccount"
       ]
     },
@@ -270,6 +270,17 @@
         "PortalApp",
         "PortalZipDeploy"
       ]
+    },
+    "PortalAppInsightsComponents": {
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02",
+      "name": "[variables('PortalAppInsightsName')]",
+      "location": "[resourceGroup().location]",
+      "kind": "web",
+      "properties": {
+        "Application_Type": "web"
+      },
+      "tags": "[union(parameters('Tags'), createObject(format('hidden-link:{0}', resourceId('Microsoft.Web/sites', parameters('PortalWebAppName'))), 'Resource'))]"
     },
     "KeyVault": {
       "type": "Microsoft.KeyVault/vaults",
@@ -352,6 +363,30 @@
         "PortalApp"
       ]
     },
+    "WorkspaceIdSecret": {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2022-07-01",
+      "name": "[format('{0}/{1}', variables('KeyVaultAppSettingsName'), 'LogAnalyticsWorkspaceId')]",
+      "properties": {
+        "value": "[reference('LogAnalyticsWorkspace').customerId]"
+      },
+      "dependsOn": [
+        "KeyVaultAppSettings",
+        "LogAnalyticsWorkspace"
+      ]
+    },
+    "SharedKeySecret": {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2022-07-01",
+      "name": "[format('{0}/{1}', variables('KeyVaultAppSettingsName'), 'LogAnalyticsWorkspaceSharedKey')]",
+      "properties": {
+        "value": "[listKeys('LogAnalyticsWorkspace', '2021-06-01').primarySharedKey]"
+      },
+      "dependsOn": [
+        "KeyVaultAppSettings",
+        "LogAnalyticsWorkspace"
+      ]
+    },
     "FunctionAppSettings": {
       "type": "Microsoft.Web/sites/config",
       "apiVersion": "2022-03-01",
@@ -366,8 +401,8 @@
         "FUNCTIONS_EXTENSION_VERSION": "~3",
         "FUNCTIONS_WORKER_PROCESS_COUNT": "3",
         "PSWorkerInProcConcurrencyUpperBound": "10",
-        "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference('AppInsights').InstrumentationKey]",
-        "APPLICATIONINSIGHTS_CONNECTION_STRING": "[reference('AppInsights').ConnectionString]",
+        "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference('FunctionAppInsightsComponents').InstrumentationKey]",
+        "APPLICATIONINSIGHTS_CONNECTION_STRING": "[reference('FunctionAppInsightsComponents').ConnectionString]",
         "FUNCTIONS_WORKER_RUNTIME": "powershell",
         "UpdateFrequencyDays": "3",
         "KeyVaultName": "[variables('KeyVaultName')]",
@@ -379,8 +414,8 @@
         "LogTypeClient": "CloudLAPSClient"
       },
       "dependsOn": [
-        "AppInsights",
         "FunctionApp",
+        "FunctionAppInsightsComponents",
         "FunctionAppZipDeploy",
         "StorageAccount"
       ]
@@ -391,8 +426,8 @@
       "name": "[format('{0}/{1}', variables('PortalWebAppNameNoDash'), 'appsettings')]",
       "properties": {
         "AzureWebJobsSecretStorageKeyVaultName": "[variables('KeyVaultName')]",
-        "APPLICATIONINSIGHTS_CONNECTION_STRING": "[reference('AppInsights').ConnectionString]",
-        "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference('AppInsights').InstrumentationKey]",
+        "APPLICATIONINSIGHTS_CONNECTION_STRING": "[reference('PortalAppInsightsComponents').ConnectionString]",
+        "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference('PortalAppInsightsComponents').InstrumentationKey]",
         "AzureAd__TenantId": "[subscription().tenantId]",
         "AzureAd__ClientId": "[parameters('AppRegistrationId')]",
         "KeyVault__Uri": "[reference('KeyVault').vaultUri]",
@@ -401,9 +436,9 @@
         "LogAnalytics__LogType": "CloudLAPSAudit"
       },
       "dependsOn": [
-        "AppInsights",
         "KeyVault",
         "PortalApp",
+        "PortalAppInsightsComponents",
         "PortalZipDeploy"
       ]
     },
