@@ -6,7 +6,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.36.177.2456",
-      "templateHash": "13508603878664220974"
+      "templateHash": "12595524949138410114"
     }
   },
   "parameters": {
@@ -445,10 +445,9 @@
     "FunctionAppZipDeploy": {
       "type": "Microsoft.Web/sites/extensions",
       "apiVersion": "2024-11-01",
-      "name": "[format('{0}/{1}', parameters('FunctionAppName'), 'onedeploy')]",
+      "name": "[format('{0}/{1}', parameters('FunctionAppName'), 'ZipDeploy')]",
       "properties": {
-        "packageUri": "https://github.com/AptLogic/CloudLAPS/releases/download/v1.3.0/CloudLAPS-FunctionApp1.3.0.zip",
-        "type": "zip"
+        "packageUri": "https://github.com/AptLogic/CloudLAPS/releases/download/v1.3.0/CloudLAPS-FunctionApp1.3.0.zip"
       },
       "dependsOn": [
         "FunctionApp"
@@ -457,10 +456,9 @@
     "PortalZipDeploy": {
       "type": "Microsoft.Web/sites/extensions",
       "apiVersion": "2024-11-01",
-      "name": "[format('{0}/{1}', variables('PortalWebAppNameNoDash'), 'onedeploy')]",
+      "name": "[format('{0}/{1}', variables('PortalWebAppNameNoDash'), 'ZipDeploy')]",
       "properties": {
-        "packageUri": "https://github.com/AptLogic/CloudLAPS/releases/download/v1.3.0/CloudLAPS-Portal1.1.0.zip",
-        "type": "zip"
+        "packageUri": "https://github.com/AptLogic/CloudLAPS/releases/download/v1.3.0/CloudLAPS-Portal1.1.0.zip"
       },
       "dependsOn": [
         "FunctionAppZipDeploy",
