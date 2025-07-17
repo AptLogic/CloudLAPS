@@ -62,10 +62,22 @@ resource VirtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
                 resourceGroup().location
               ]
             }
+            {
+              service: 'Microsoft.KeyVault'
+              locations: [
+                resourceGroup().location
+              ]
+            }
+            {
+              service: 'Microsoft.Web'
+              locations: [
+                resourceGroup().location
+              ]
+            }
           ]
           delegations: [
             {
-              name: 'delegation'
+              name: 'Microsoft.Web/ServerFarms'
               properties: {
                 serviceName: 'Microsoft.Web/serverfarms'
               }
@@ -106,10 +118,8 @@ resource AppServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   sku: {
     name: AppServicePlanSKU
   }
-  kind: 'linux'
-  properties: {
-    reserved: true
-  }
+  kind: 'Windows'
+  properties: {}
   tags: Tags
 }
 
@@ -129,7 +139,7 @@ resource FunctionAppInsightsComponents 'Microsoft.Insights/components@2020-02-02
 resource FunctionApp 'Microsoft.Web/sites@2024-04-01' = {
   name: FunctionAppName
   location: resourceGroup().location
-  kind: 'functionapp,linux'
+  kind: 'functionapp'
   identity: {
     type: 'SystemAssigned'
   }
@@ -139,6 +149,7 @@ resource FunctionApp 'Microsoft.Web/sites@2024-04-01' = {
     httpsOnly: true
     siteConfig: {
       ftpsState: 'Disabled'
+      alwaysOn: true
       minTlsVersion: '1.2'
       powerShellVersion: '~7.4'
       scmType: 'None'
@@ -169,7 +180,7 @@ resource FunctionApp 'Microsoft.Web/sites@2024-04-01' = {
         }
         {
           name: 'FUNCTIONS_EXTENSION_VERSION'
-          value: '~3'
+          value: '~4'
         }
         {
           name: 'FUNCTIONS_WORKER_PROCESS_COUNT'
@@ -202,23 +213,19 @@ resource PortalApp 'Microsoft.Web/sites@2024-04-01' = {
   identity: {
     type: 'SystemAssigned'
   }
-  kind: 'app,linux'
+  kind: 'app'
   properties: {
     serverFarmId: AppServicePlan.id
+    siteConfig: {
+      alwaysOn: true
+      metadata: [
+        {
+          name: 'CURRENT_STACK'
+          value: 'dotnetcore'
+        }
+      ]
+    }
   }
-}
-
-resource PortalAppConfig 'Microsoft.Web/sites/config@2024-04-01' = {
-  parent: PortalApp
-  name: 'web'
-  properties: {
-    netFrameworkVersion: 'v4.0'
-    linuxFxVersion: 'DOTNETCORE|8.0'
-    alwaysOn: true
-  }
-  dependsOn: [
-    PortalZipDeploy
-  ]
 }
 
 // Create application insights for CloudLAPS portal
@@ -264,6 +271,16 @@ resource KeyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
         }
       }
     ]
+    networkAcls: {
+      bypass: 'AzureServices'
+      defaultAction: 'Deny'
+      virtualNetworkRules: [
+        {
+          id: resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks/subnets', VirtualNetworkName, 'sn0')
+          ignoreMissingVnetServiceEndpoint: false
+        }
+      ]
+    }
     sku: {
       name: 'standard'
       family: 'A'
@@ -344,7 +361,7 @@ resource FunctionAppSettings 'Microsoft.Web/sites/config@2022-03-01' = {
     WEBSITE_CONTENTSHARE: toLower('CloudLAPS')
     WEBSITE_RUN_FROM_PACKAGE: '1'
     AzureWebJobsDisableHomepage: 'true'
-    FUNCTIONS_EXTENSION_VERSION: '~3'
+    FUNCTIONS_EXTENSION_VERSION: '~4'
     FUNCTIONS_WORKER_PROCESS_COUNT: '3'
     PSWorkerInProcConcurrencyUpperBound: '10'
     APPINSIGHTS_INSTRUMENTATIONKEY: FunctionAppInsightsComponents.properties.InstrumentationKey
