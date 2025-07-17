@@ -6,7 +6,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.36.177.2456",
-      "templateHash": "13668727602690444606"
+      "templateHash": "13508603878664220974"
     }
   },
   "parameters": {
@@ -70,7 +70,7 @@
     "FunctionAppNameNoDash": "[replace(parameters('FunctionAppName'), '-', '')]",
     "FunctionAppNameNoDashUnderScore": "[replace(variables('FunctionAppNameNoDash'), '_', '')]",
     "PortalWebAppNameNoDash": "[replace(parameters('PortalWebAppName'), '-', '')]",
-    "StorageAccountName": "[toLower(format('{0}-sa', take(variables('FunctionAppNameNoDashUnderScore'), 17)))]",
+    "StorageAccountName": "[toLower(format('{0}sa', take(variables('FunctionAppNameNoDashUnderScore'), 17)))]",
     "AppServicePlanName": "[format('{0}-plan', parameters('ApplicationName'))]",
     "FunctionAppInsightsName": "[format('{0}-fa-ai', parameters('ApplicationName'))]",
     "PortalAppInsightsName": "[format('{0}-wa-ai', parameters('ApplicationName'))]",
