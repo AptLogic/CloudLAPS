@@ -6,7 +6,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.36.177.2456",
-      "templateHash": "11783261595712554907"
+      "templateHash": "3893148976273217210"
     }
   },
   "parameters": {
@@ -369,6 +369,16 @@
             }
           }
         ],
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "defaultAction": "Deny",
+          "virtualNetworkRules": [
+            {
+              "id": "[resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks/subnets', variables('VirtualNetworkName'), 'sn0')]",
+              "ignoreMissingVnetServiceEndpoint": false
+            }
+          ]
+        },
         "sku": {
           "name": "standard",
           "family": "A"

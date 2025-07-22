@@ -317,6 +317,16 @@ resource KeyVaultAppSettings 'Microsoft.KeyVault/vaults@2022-07-01' = {
         }
       }
     ]
+    networkAcls: {
+      bypass: 'AzureServices'
+      defaultAction: 'Deny'
+      virtualNetworkRules: [
+        {
+          id: resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks/subnets', VirtualNetworkName, 'sn0')
+          ignoreMissingVnetServiceEndpoint: false
+        }
+      ]
+    }
     sku: {
       name: 'standard'
       family: 'A'
