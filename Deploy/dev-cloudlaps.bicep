@@ -28,16 +28,16 @@ param AppServicePlanSKU string = 'S1'
 param Tags object = {}
 
 // Define variables
-var KeyVaultName = '${toLower(ApplicationName)}-kv'
-var LogAnalyticsWorkspaceName = '${toLower(ApplicationName)}-law'
+var KeyVaultName = '${take(toLower(ApplicationName), 21)}-kv'
+var LogAnalyticsWorkspaceName = '${take(toLower(ApplicationName), 20)}-law'
 var FunctionAppNameNoDash = replace(FunctionAppName, '-', '')
 var FunctionAppNameNoDashUnderScore = replace(FunctionAppNameNoDash, '_', '')
 var PortalWebAppNameNoDash = replace(PortalWebAppName, '-', '')
-var StorageAccountName = toLower('${take(FunctionAppNameNoDashUnderScore, 17)}sa')
+var StorageAccountName = toLower('${take(FunctionAppNameNoDashUnderScore, 17)}-sa')
 var AppServicePlanName = '${ApplicationName}-plan'
 var FunctionAppInsightsName = '${ApplicationName}-fa-ai'
 var PortalAppInsightsName = '${ApplicationName}-wa-ai'
-var KeyVaultAppSettingsName = '${take(KeyVaultName, 21)}-as'
+var KeyVaultAppSettingsName = '${take(toLower(ApplicationName), 21)}-as'
 var VirtualNetworkName string = '${FunctionAppName}-vnet'
 
 resource VirtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
