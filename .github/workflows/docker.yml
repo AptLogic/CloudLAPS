@@ -70,14 +70,14 @@ jobs:
       - name: Lint Dockerfile
         uses: hadolint/hadolint-action@v3.3.0
         with:
-          dockerfile: "Azure Functions/Dockerfile"
+          dockerfile: "./Azure Functions/Dockerfile"
 
       - name: Build and optionally push image
         id: build
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: "Azure Functions/Dockerfile"
+          file: "./Azure Functions/Dockerfile"
           push: ${{ github.event_name != 'pull_request' && (github.event_name != 'workflow_dispatch' || github.event.inputs.push_image != 'false') }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
