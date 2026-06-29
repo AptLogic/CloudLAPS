@@ -105,9 +105,9 @@ if ($HeaderValidation -eq $true) {
         # Verify device platform is MacOS
         if($AzureADDeviceRecord.operatingSystem -eq "MacMDM") {
             # Validate existing validation data is expired or empty.
-            if($null -eq $AzureADDeviceRecord.ExtensionAttributes.extensionAttribute11 -or ([dateTime]::ParseExact($AzureADDeviceRecord.ExtensionAttributes.extensionAttribute12, 'yyyy-MM-dd', $null) -le [dateTime]::ParseExact($ExpirationDate, 'yyyy-MM-dd', $null))) {
+            if($null -eq $AzureADDeviceRecord.ExtensionAttributes.extensionAttribute11 -or ([dateTime]::Parse($AzureADDeviceRecord.ExtensionAttributes.extensionAttribute12) -le [dateTime]::Parse($ExpirationDate))) {
                 # OK, continue to validate expiration date
-                if(($null -eq $AzureADDeviceRecord.ExtensionAttributes.extensionAttribute12) -or ([dateTime]::ParseExact($AzureADDeviceRecord.ExtensionAttributes.extensionAttribute12, 'yyyy-MM-dd', $null) -le [dateTime]::ParseExact($ExpirationDate, 'yyyy-MM-dd', $null))) {
+                if(($null -eq $AzureADDeviceRecord.ExtensionAttributes.extensionAttribute12) -or ([dateTime]::Parse($AzureADDeviceRecord.ExtensionAttributes.extensionAttribute12) -le [dateTime]::Parse($ExpirationDate))) {
                     Write-Output -InputObject "Successfully validated expiration dates for security ID rewrite"
                     # OK, continue to validate thumbprint
                     $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2(,[Convert]::FromBase64String($FullPem))

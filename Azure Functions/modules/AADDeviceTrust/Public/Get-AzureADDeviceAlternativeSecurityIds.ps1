@@ -25,10 +25,24 @@ function Get-AzureADDeviceAlternativeSecurityIds {
     )
     Process {
         $DecodedKey = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($Key))
+        $SplitKey = $DecodedKey.Split(">")
+        
+        # Extract prefix with length check
+        $Prefix = if ($DecodedKey.Length -ge 21) { $DecodedKey.SubString(0,21) } else { $DecodedKey }
+        
+        # Extract thumbprint and pubkeyhash with safety checks
+        $Thumbprint = ""
+        $PublicKeyHash = ""
+        if ($SplitKey.Length -gt 1) {
+            $AfterSplit = $SplitKey[1]
+            $Thumbprint = if ($AfterSplit.Length -ge 40) { $AfterSplit.SubString(0,40) } else { $AfterSplit }
+            $PublicKeyHash = if ($AfterSplit.Length -gt 40) { $AfterSplit.SubString(40) } else { "" }
+        }
+        
         $PSObject = [PSCustomObject]@{
-            "Prefix" = $DecodedKey.SubString(0,21)
-            "Thumbprint" = $DecodedKey.Split(">")[1].SubString(0,40)
-            "PublicKeyHash" = $DecodedKey.Split(">")[1].SubString(40)
+            "Prefix" = $Prefix
+            "Thumbprint" = $Thumbprint
+            "PublicKeyHash" = $PublicKeyHash
             "FullKey" = $Key
         }
 
