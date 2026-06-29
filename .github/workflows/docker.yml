@@ -77,7 +77,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: '"Azure Functions/Dockerfile"'
+          file: Azure Functions/Dockerfile
           push: ${{ github.event_name != 'pull_request' && (github.event_name != 'workflow_dispatch' || github.event.inputs.push_image != 'false') }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
