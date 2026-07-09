@@ -14,6 +14,9 @@
 if ($env:MSI_SECRET) {
     Disable-AzContextAutosave -Scope Process
     Connect-AzAccount -Identity
+} else if ($env:APP_REG_CLIENTID && $env:APP_REG_TENANTID && $env:APP_REG_SECRET) {
+    Disable-AzContextAutosave -Scope Process
+    Connect-AzAccount -ServicePrincipal -Tenant $env:APP_REG_TENANTID -ApplicationId $env:APP_REG_CLIENTID -Credential (New-Object System.Management.Automation.PSCredential($env:APP_REG_CLIENTID, (ConvertTo-SecureString $env:APP_REG_SECRET -AsPlainText -Force)))
 }
 Set-Item "Env:\SuppressAzurePowerShellBreakingChangeWarnings" "true"
 
