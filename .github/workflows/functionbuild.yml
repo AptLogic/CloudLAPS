@@ -30,7 +30,7 @@ jobs:
         run: |
           echo Zip Build Files running...
           cd $GITHUB_WORKSPACE
-          cd "Azure Functions"
+          cd "AzureFunctions"
           zip -r ../function_artifact.zip *
 
       - name: Upload Artifact
