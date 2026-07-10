@@ -3,8 +3,7 @@
 #
 @{
     # For latest supported version, go to 'https://www.powershellgallery.com/packages/Az'. 
-    'Az.Accounts' = '2.*'
-    'Az.KeyVault' = '4.*'
+    'Az.Accounts' = '5.*'
+    'Az.KeyVault' = '6.*'
     'Microsoft.Graph.Authentication' = '2.*'
-    'WPNinjas.PasswordGeneration' = '1.*'
 }

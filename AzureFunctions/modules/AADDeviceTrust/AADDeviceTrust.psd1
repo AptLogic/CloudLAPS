@@ -43,7 +43,8 @@
                           "New-HashString",
                           "Test-AzureADDeviceAlternativeSecurityIds",
                           "Test-Encryption",
-                          "Write-AzureADDeviceAttributes"
+                          "Write-AzureADDeviceAttributes",
+                          "Invoke-PasswordGeneration"
     )
     
     # Variables to export from this module
