@@ -14,11 +14,11 @@
 if ($env:MSI_SECRET) {
     Disable-AzContextAutosave -Scope Process
     Connect-AzAccount -Identity
-    Connect-MgGraph -Identity
-} elseif ($env:APP_REG_CLIENTID && $env:APP_REG_TENANTID && $env:APP_REG_SECRET) {
-    Disable-AzContextAutosave -Scope Process
-    Connect-MgGraph -NoWelcome -TenantId $env:APP_REG_TENANTID -ClientSecretCredential (New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $env:APP_REG_CLIENTID, (ConvertTo-SecureString $env:APP_REG_SECRET -AsPlainText -Force))
-    Connect-AzAccount -ServicePrincipal -Tenant $env:APP_REG_TENANTID -ApplicationId $env:APP_REG_CLIENTID -Credential (New-Object System.Management.Automation.PSCredential($env:APP_REG_CLIENTID, (ConvertTo-SecureString $env:APP_REG_SECRET -AsPlainText -Force)))
+    if($env:APP_REG_CLIENTID && $env:APP_REG_TENANTID && $env:APP_REG_SECRET) {
+        Connect-MgGraph -NoWelcome -TenantId $env:APP_REG_TENANTID -ClientSecretCredential (New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $env:APP_REG_CLIENTID, (ConvertTo-SecureString $env:APP_REG_SECRET -AsPlainText -Force))
+    } else {
+        Connect-MgGraph -NoWelcome -Identity
+    }
 }
 Set-Item "Env:\SuppressAzurePowerShellBreakingChangeWarnings" "true"
 Import-Module -Name "$PSScriptRoot/modules/AADDeviceTrust"
