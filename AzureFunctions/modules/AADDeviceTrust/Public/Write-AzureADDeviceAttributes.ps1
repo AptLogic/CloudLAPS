@@ -34,7 +34,7 @@ function Write-AzureADDeviceAttributes {
     Process {
         # Get Object ID
         $GraphURI = "v1.0/devices?`$filter=deviceId eq '$($DeviceID)'"
-        $GraphResponse = (Invoke-MgGraphRequest -Method GET -Uri $GraphUri -OutputType Json -ErrorAction Stop)
+        $GraphResponse = (ConvertFrom-Json -InputObject (Invoke-MgGraphRequest -Method GET -Uri $GraphUri -OutputType Json -ErrorAction Stop)).value
         $ObjectId = $GraphResponse.id
         $GraphURI = "v1.0/devices/{$($ObjectId)}"
         $GraphBody = @"
@@ -44,7 +44,7 @@ function Write-AzureADDeviceAttributes {
     }
 }
 "@
-        $GraphResponse = (Invoke-MgGraphRequest -Method PATCH -Uri $GraphUri -Body $GraphBody -OutputType Json -ErrorAction Stop)
+        $GraphResponse = (ConvertFrom-Json -InputObject (Invoke-MgGraphRequest -Method PATCH -Uri $GraphUri -Body $GraphBody -OutputType Json -ErrorAction Stop)).value
         # Handle return response
         return $GraphResponse
     }

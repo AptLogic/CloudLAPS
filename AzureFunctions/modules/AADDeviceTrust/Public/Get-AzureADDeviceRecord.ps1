@@ -27,7 +27,7 @@ function Get-AzureADDeviceRecord {
     )
     Process {
         $GraphURI = "v1.0/devices?`$filter=deviceId eq '$($DeviceID)'"
-        $GraphResponse = (Invoke-MgGraphRequest -Method GET -Uri $GraphUri -OutputType Json -ErrorAction Stop)
+        $GraphResponse = (ConvertFrom-Json -InputObject (Invoke-MgGraphRequest -Method GET -Uri $GraphUri -OutputType Json -ErrorAction Stop)).value
         # Handle return response
         return $GraphResponse
     }
