@@ -32,10 +32,9 @@ function Write-AzureADDeviceAttributes {
         [string]$attributeContent
     )
     Process {
-        Connect-MgGraph -NoWelcome -TenantId $env:APP_REG_TENANTID -ClientSecretCredential (New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $env:APP_REG_CLIENTID, (ConvertTo-SecureString $env:APP_REG_SECRET -AsPlainText -Force))
         # Get Object ID
         $GraphURI = "v1.0/devices?`$filter=deviceId eq '$($DeviceID)'"
-        $GraphResponse = (Invoke-MgGraphRequest -Method GET -Uri $GraphUri -OutputType Json -ErrorAction Stop).value
+        $GraphResponse = (Invoke-MgGraphRequest -Method GET -Uri $GraphUri -OutputType Json -ErrorAction Stop)
         $ObjectId = $GraphResponse.id
         $GraphURI = "v1.0/devices/{$($ObjectId)}"
         $GraphBody = @"
@@ -45,7 +44,7 @@ function Write-AzureADDeviceAttributes {
     }
 }
 "@
-        $GraphResponse = (Invoke-MgGraphRequest -Method PATCH -Uri $GraphUri -Body $GraphBody -OutputType Json -ErrorAction Stop).value
+        $GraphResponse = (Invoke-MgGraphRequest -Method PATCH -Uri $GraphUri -Body $GraphBody -OutputType Json -ErrorAction Stop)
         # Handle return response
         return $GraphResponse
     }
