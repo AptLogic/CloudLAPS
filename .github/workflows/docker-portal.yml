@@ -51,9 +51,6 @@ jobs:
     name: Validate Build
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: ./Portal
 
     steps:
       - name: Checkout
@@ -62,13 +59,15 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 25
+          node-version: 26
           cache: npm
 
       - name: Install dependencies
+        working-directory: ./Portal
         run: npm install
 
       - name: Compile TypeScript
+        working-directory: ./Portal
         run: npm run build
 
   docker:
