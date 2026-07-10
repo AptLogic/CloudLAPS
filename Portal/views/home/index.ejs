@@ -1,0 +1,82 @@
+<section class="hero-panel">
+  <div class="hero-copy">
+    <p class="eyebrow">Secure Credential Retrieval</p>
+    <h1>CloudLAPS Portal</h1>
+    <p>
+      Retrieve local administrator passwords for approved devices through a
+      manual, audited lookup.
+    </p>
+  </div>
+</section>
+
+<section class="search-panel" aria-labelledby="lookup-title">
+  <h2 id="lookup-title">Lookup Device Credential</h2>
+  <p class="help-text">
+    For physical devices, use the serial number. For virtual machines, use the
+    computer name.
+  </p>
+
+  <form action="/search/execute" method="GET" id="search-form" autocomplete="off">
+    <label for="searchValue">Serial number or computer name</label>
+    <div class="search-row">
+      <input
+        type="text"
+        name="searchValue"
+        id="searchValue"
+        value="<%= searchValue || '' %>"
+        required
+        maxlength="128"
+        spellcheck="false"
+      />
+      <button id="Search" type="submit" class="btn btn-primary" onclick="submitSearchForm()">
+        Search
+      </button>
+      <div id="loading" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+          <span class="sr-only"></span>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <% if (secret) { %>
+  <section class="result-panel success" aria-live="polite">
+    <h3>Credential Found</h3>
+    <table class="table table-borderless credential-table">
+      <tr>
+        <th scope="row">Computer name</th>
+        <td><%= secret.secretDeviceName %></td>
+      </tr>
+      <tr>
+        <th scope="row">Serial number</th>
+        <td><%= secret.secretSerialNumber %></td>
+      </tr>
+      <tr>
+        <th scope="row">User name</th>
+        <td><%= secret.secretUserName %></td>
+      </tr>
+      <tr>
+        <th scope="row">Password</th>
+        <td><strong><%= secret.secretValue %></strong></td>
+      </tr>
+      <tr>
+        <th scope="row">Last update</th>
+        <td><%= secret.secretDate %></td>
+      </tr>
+    </table>
+  </section>
+  <% } else if (result === 'Failed') { %>
+  <section class="result-panel failure" aria-live="polite">
+    <h3>No credential found</h3>
+    <p>Search returned an empty result. Verify the value and try again.</p>
+  </section>
+  <% } %>
+</section>
+
+<section class="privacy-panel" id="privacy">
+  <h2>Privacy and Audit</h2>
+  <p>
+    Retrieving the local administrator password of a specific computer is
+    audited and monitored.
+  </p>
+</section>

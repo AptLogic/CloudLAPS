@@ -1,0 +1,26 @@
+# Docker Compose for local development
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - APP_BASE_URL=${APP_BASE_URL}
+      - KEY_VAULT_URI=${KEY_VAULT_URI}
+      - LOG_ANALYTICS_WORKSPACE_ID=${LOG_ANALYTICS_WORKSPACE_ID}
+      - LOG_ANALYTICS_SHARED_KEY=${LOG_ANALYTICS_SHARED_KEY}
+      - LOG_ANALYTICS_LOG_TYPE=${LOG_ANALYTICS_LOG_TYPE}
+      - TRUST_PROXY=${TRUST_PROXY}
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src
+      - ./views:/app/views
+      - ./public:/app/public
+    restart: unless-stopped

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Error - CloudLAPS</title>
+  <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.css" />
+  <link rel="stylesheet" href="/css/site.css" />
+</head>
+<body>
+  <div class="container">
+    <main role="main" class="pb-3">
+      <h1 class="text-danger">Error</h1>
+      <h2 class="text-danger"><%= title %></h2>
+      <% if (typeof message !== 'undefined') { %>
+        <p><%= message %></p>
+      <% } %>
+    </main>
+  </div>
+</body>
+</html>

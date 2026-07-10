@@ -1,0 +1,50 @@
+{
+  "name": "cloudlaps-portal-node",
+  "version": "1.0.0",
+  "description": "CloudLAPS Portal - Node.js implementation for retrieving local administrator passwords from Azure Key Vault",
+  "main": "dist/app.js",
+  "scripts": {
+    "start": "node dist/app.js",
+    "dev": "nodemon --exec ts-node src/app.ts",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "clean": "rm -rf dist",
+    "test": "jest"
+  },
+  "keywords": [
+    "azure",
+    "laps",
+    "keyvault",
+    "security",
+    "password-management"
+  ],
+  "author": "AptLogic",
+  "license": "MIT",
+  "dependencies": {
+    "@azure/identity": "^4.13.1",
+    "@azure/keyvault-secrets": "^4.11.2",
+    "bootstrap": "^5.3.8",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.4.2",
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "express-ejs-layouts": "^2.5.1",
+    "helmet": "^8.2.0",
+    "jquery": "^4.0.0",
+    "morgan": "^1.11.0"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/express": "^5.0.6",
+    "@types/express-ejs-layouts": "^2.5.4",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^25.9.2",
+    "nodemon": "^3.1.14",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=25.0.0",
+    "npm": ">=9.0.0"
+  }
+}

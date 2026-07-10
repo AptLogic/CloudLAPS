@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.css" />
+  <link rel="stylesheet" href="/css/site.css" />
+</head>
+<body>
+  <header class="app-header">
+    <nav class="container app-nav" aria-label="Main">
+      <a class="brand" href="/" aria-label="CloudLAPS home">
+        <img src="/images/logo.png" title="CloudLAPS" alt="CloudLAPS Logo" width="34" height="34" />
+        <span>CloudLAPS</span>
+      </a>
+      <div class="user-actions">
+        <% if (user.isAuthenticated) { %>
+        <span class="user-chip" title="Signed in user"><%= user.name %></span>
+        <a class="btn btn-sm btn-outline-light" href="/auth/signout">Sign out</a>
+        <% } else { %>
+        <a class="btn btn-sm btn-light" href="/auth/signin">Sign in</a>
+        <% } %>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container app-main" role="main">
+      <%- body %>
+  </main>
+
+  <footer class="app-footer">
+    <div class="container">
+      <span>&copy; 2026 CloudLAPS</span>
+    </div>
+  </footer>
+
+  <script src="/lib/jquery/dist/jquery.min.js"></script>
+  <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/site.js"></script>
+</body>
+</html>
