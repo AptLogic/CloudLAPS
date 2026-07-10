@@ -9,48 +9,6 @@ param(
     $TriggerMetadata
 )
 
-# Functions
-function Get-AuthToken {
-    <#
-    .SYNOPSIS
-        Retrieve an access token for the Managed System Identity.
-    
-    .DESCRIPTION
-        Retrieve an access token for the Managed System Identity.
-    
-    .NOTES
-        Author:      Nickolaj Andersen
-        Contact:     @NickolajA
-        Created:     2021-06-07
-        Updated:     2021-06-07
-    
-        Version history:
-        1.0.0 - (2021-06-07) Function created
-    #>
-    Process {
-        # Get Managed Service Identity details from the Azure Functions application settings
-        $MSIEndpoint = $env:MSI_ENDPOINT
-        $MSISecret = $env:MSI_SECRET
-
-        # Define the required URI and token request params
-        $APIVersion = "2017-09-01"
-        $ResourceURI = "https://graph.microsoft.com"
-        $AuthURI = $MSIEndpoint + "?resource=$($ResourceURI)&api-version=$($APIVersion)"
-
-        # Call resource URI to retrieve access token as Managed Service Identity
-        $Response = Invoke-RestMethod -Uri $AuthURI -Method "Get" -Headers @{ "Secret" = "$($MSISecret)" }
-
-        # Construct authentication header to be returned from function
-        $AuthenticationHeader = @{
-            "Authorization" = "Bearer $($Response.access_token)"
-            "ExpiresOn" = $Response.expires_on
-        }
-
-        # Handle return value
-        return $AuthenticationHeader
-    }
-}
-
 function Send-LogAnalyticsPayload {
     <#
     .SYNOPSIS
@@ -154,9 +112,6 @@ $SharedKey = if (-not([string]::IsNullOrEmpty($env:LogAnalyticsWorkspaceSharedKe
 $LogType = if (-not([string]::IsNullOrEmpty($env:LogTypeClient))) { $env:LogTypeClient } else { "CloudLAPSClient" }
 $DebugLogging = if (-not([string]::IsNullOrEmpty($env:DebugLogging))) { $env:DebugLogging } else { $false }
 
-# Retrieve authentication token
-$AuthToken = Get-AuthToken
-
 # Initate variables
 $StatusCode = [HttpStatusCode]::OK
 $Body = [string]::Empty
@@ -212,7 +167,7 @@ if ($HeaderValidation -eq $true) {
     # Initiate request handling
     Write-Output -InputObject "Initiating request handling for device named as '$($DeviceName)' with identifier: $($DeviceID)"
 
-    $AzureADDeviceRecord = Get-AzureADDeviceRecord -DeviceID $DeviceID -AuthToken $AuthToken
+    $AzureADDeviceRecord = Get-AzureADDeviceRecord -DeviceID $DeviceID
     if ($null -ne $AzureADDeviceRecord) {
         Write-Output -InputObject "Found trusted Azure AD device record with object identifier: $($AzureADDeviceRecord.id)"
         $SecIdExpDate = $AzureADDeviceRecord.extensionAttributes.extensionAttribute12

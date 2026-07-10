@@ -8,9 +8,6 @@ function Get-AzureADDeviceRecord {
 
     .PARAMETER DeviceID
         Specify the Device ID of an Azure AD device record.
-
-    .PARAMETER AuthToken
-        Specify a hash table consisting of the authentication headers.
     
     .NOTES
         Author:      Nickolaj Andersen
@@ -21,19 +18,16 @@ function Get-AzureADDeviceRecord {
         Version history:
         1.0.0 - (2021-06-07) Function created
         1.0.1 - (2022-01-01) Added support for passing in the authentication header table to the function
+        1.1.0 - (2026-07-10) Updated to use MgGraph
     #>
     param(
         [parameter(Mandatory = $true, HelpMessage = "Specify the Device ID of an Azure AD device record.")]
         [ValidateNotNullOrEmpty()]
-        [string]$DeviceID,
-
-        [parameter(Mandatory = $true, HelpMessage = "Specify a hash table consisting of the authentication headers.")]
-        [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$AuthToken
+        [string]$DeviceID
     )
     Process {
-        $GraphURI = "https://graph.microsoft.com/v1.0/devices?`$filter=deviceId eq '$($DeviceID)'"
-        $GraphResponse = (Invoke-RestMethod -Method "Get" -Uri $GraphURI -ContentType "application/json" -Headers $AuthToken -ErrorAction Stop).value
+        $GraphURI = "v1.0/devices?`$filter=deviceId eq '$($DeviceID)'"
+        $GraphResponse = (Invoke-MgGraphRequest -Method GET -Uri $GraphUri -OutputType Json -ErrorAction Stop).value
         
         # Handle return response
         return $GraphResponse

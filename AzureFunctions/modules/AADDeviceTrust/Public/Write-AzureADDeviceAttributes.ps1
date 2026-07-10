@@ -8,9 +8,6 @@ function Write-AzureADDeviceAttributes {
 
     .PARAMETER DeviceID
         Specify the Device ID of an Azure AD device record.
-
-    .PARAMETER AuthToken
-        Specify a hash table consisting of the authentication headers.
     
     .NOTES
         Author:      Henry Kon
@@ -19,15 +16,12 @@ function Write-AzureADDeviceAttributes {
     
         Version history:
         1.0.0 - (2024-10-15) Function created
+        1.1.0 - (2026-07-10) Updated to use MgGraph
     #>
     param(
         [parameter(Mandatory = $true, HelpMessage = "Specify the Device ID of an Azure AD device record.")]
         [ValidateNotNullOrEmpty()]
         [string]$DeviceID,
-
-        [parameter(Mandatory = $true, HelpMessage = "Specify a hash table consisting of the authentication headers.")]
-        [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$AuthToken,
 
         [parameter(Mandatory = $true, HelpMessage = "Specify the extension attribute to modify.")]
         [ValidateNotNullOrEmpty()]
@@ -39,10 +33,10 @@ function Write-AzureADDeviceAttributes {
     )
     Process {
         # Get Object ID
-        $GraphURI = "https://graph.microsoft.com/v1.0/devices?`$filter=deviceId eq '$($DeviceID)'"
-        $GraphResponse = (Invoke-RestMethod -Method "Get" -Uri $GraphURI -ContentType "application/json" -Headers $AuthToken -ErrorAction Stop).value
+        $GraphURI = "v1.0/devices?`$filter=deviceId eq '$($DeviceID)'"
+        $GraphResponse = (Invoke-MgGraphRequest -Method GET -Uri $GraphUri -OutputType Json -ErrorAction Stop).value
         $ObjectId = $GraphResponse.id
-        $GraphURI = "https://graph.microsoft.com/v1.0/devices/{$($ObjectId)}"
+        $GraphURI = "v1.0/devices/{$($ObjectId)}"
         $GraphBody = @"
 {
     `"extensionAttributes`": {
@@ -50,7 +44,7 @@ function Write-AzureADDeviceAttributes {
     }
 }
 "@
-        $GraphResponse = (Invoke-RestMethod -Method "PATCH" -Uri $GraphURI -ContentType "application/json" -Headers $AuthToken -Body $GraphBody -ErrorAction Stop).value
+        $GraphResponse = (Invoke-MgGraphRequest -Method PATCH -Uri $GraphUri -Body $GraphBody -OutputType Json -ErrorAction Stop).value
         # Handle return response
         return $GraphResponse
     }
