@@ -19,7 +19,7 @@ if ($env:MSI_SECRET) {
     Connect-AzAccount -ServicePrincipal -Tenant $env:APP_REG_TENANTID -ApplicationId $env:APP_REG_CLIENTID -Credential (New-Object System.Management.Automation.PSCredential($env:APP_REG_CLIENTID, (ConvertTo-SecureString $env:APP_REG_SECRET -AsPlainText -Force)))
 }
 Set-Item "Env:\SuppressAzurePowerShellBreakingChangeWarnings" "true"
-
+Import-Module -Name "$PSScriptRoot/modules/AADDeviceTrust"
 # Uncomment the next line to enable legacy AzureRm alias in Azure PowerShell.
 # Enable-AzureRmAlias
 
