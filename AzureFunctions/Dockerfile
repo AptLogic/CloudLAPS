@@ -3,7 +3,7 @@
 FROM mcr.microsoft.com/azure-functions/powershell:4-powershell7.4
 ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
     FUNCTIONS_WORKER_RUNTIME=powershell \
-    FUNCTIONS_WORKER_RUNTIME_VERSION=7.4 \
+    FUNCTIONS_WORKER_RUNTIME_VERSION=7.6 \
     AzureFunctionsJobHost__Logging__Console__IsEnabled=true
 
 COPY . /home/site/wwwroot
