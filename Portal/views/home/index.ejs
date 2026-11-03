@@ -42,6 +42,7 @@
   <% if (secret) { %>
   <section class="result-panel success" aria-live="polite">
     <h3>Credential Found</h3>
+    <% const versionBack = Math.max(versions.findIndex((version) => version.version === secret.secretVersion), 0); %>
     <% if (versions && versions.length > 0) { %>
     <div class="version-history">
       <label for="secret-version">Secret version</label>
@@ -52,6 +53,7 @@
           <%= version.version === secret.secretVersion ? 'selected' : '' %>
         >
           <%= version.version === secret.secretVersion ? 'Current selection' : version.updatedOn %>
+          (<%= versions.indexOf(version) === 0 ? 'Latest' : `${versions.indexOf(version)} versions back` %>)
         </option>
         <% }); %>
       </select>
@@ -76,7 +78,7 @@
       </tr>
       <tr>
         <th scope="row">Last update</th>
-        <td><%= secret.secretDate %></td>
+        <td><%= secret.secretDate %> (<%= versionBack === 0 ? 'Latest' : `${versionBack} versions back` %>)</td>
       </tr>
       <tr>
         <th scope="row">Version</th>

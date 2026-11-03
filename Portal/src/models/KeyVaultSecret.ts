@@ -98,6 +98,21 @@ export class KeyVaultSecret implements IKeyVaultSecret {
       });
     }
 
-    return versions.filter((secret) => secret.version !== '');
+    return versions
+      .filter((secret) => secret.version !== '')
+      .sort((left, right) => {
+        const leftTimestamp = Date.parse(left.updatedOn);
+        const rightTimestamp = Date.parse(right.updatedOn);
+
+        if (Number.isNaN(leftTimestamp)) {
+          return Number.isNaN(rightTimestamp) ? 0 : 1;
+        }
+
+        if (Number.isNaN(rightTimestamp)) {
+          return -1;
+        }
+
+        return rightTimestamp - leftTimestamp;
+      });
   }
 }
