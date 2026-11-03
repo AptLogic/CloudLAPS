@@ -1,15 +1,20 @@
 // JavaScript for CloudLAPS Portal
 
-/**
- * Submit the search form and display a busy indicator while the search is being processed.
- */
-function submitSearchForm() {
+function showLoadingIndicator() {
   const loadingElement = document.getElementById("loading");
-  const submitButton = document.getElementById("Search");
 
   if (loadingElement) {
     loadingElement.style.display = "block";
   }
+}
+
+/**
+ * Submit the search form and display a busy indicator while the search is being processed.
+ */
+function submitSearchForm() {
+  const submitButton = document.getElementById("Search");
+
+  showLoadingIndicator();
 
   if (submitButton) {
     submitButton.setAttribute("disabled", "disabled");
@@ -17,6 +22,16 @@ function submitSearchForm() {
   }
 
   document.getElementById("search-form").submit();
+}
+
+function loadSecretVersion(selectElement) {
+  if (!selectElement.value) {
+    return;
+  }
+
+  showLoadingIndicator();
+  selectElement.disabled = true;
+  window.location.href = selectElement.value;
 }
 
 document.addEventListener("DOMContentLoaded", () => {

@@ -46,7 +46,7 @@
     <% if (versions && versions.length > 0) { %>
     <div class="version-history">
       <label for="secret-version">Secret version</label>
-      <select id="secret-version" onchange="if (this.value) window.location.href = this.value;">
+      <select id="secret-version" onchange="loadSecretVersion(this);">
         <% versions.forEach((version) => { %>
         <option
           value="/search/execute?searchValue=<%= encodeURIComponent(searchValue) %>&version=<%= encodeURIComponent(version.version) %>"
