@@ -1,6 +1,6 @@
 {
   "name": "cloudlaps-portal-node",
-  "version": "1.0.0",
+  "version": "1.1.261103",
   "description": "CloudLAPS Portal - Node.js implementation for retrieving local administrator passwords from Azure Key Vault",
   "main": "dist/app.js",
   "scripts": {

@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import expressLayouts from 'express-ejs-layouts';
+import packageJson from '../package.json';
 
 // Import configuration
 import { config, validateConfig } from './config';
@@ -16,6 +17,7 @@ import homeRoutes from './routes/home';
 import { attachUser } from './middleware/authMiddleware';
 
 const app = express();
+app.locals.applicationVersion = packageJson.version;
 
 // Respect reverse proxy headers when deployed behind App Service/front-door/load balancers.
 if (config.app.nodeEnv === 'production') {
@@ -83,6 +85,12 @@ app.use(
 // Static files middleware
 app.use(express.static(path.join(__dirname, '../public')));
 
+// Keep the health probe independent of authentication and external services.
+app.get('/health', (_req: Request, res: Response) => {
+  res.set('Cache-Control', 'no-store');
+  res.status(200).json({ status: 'ok' });
+});
+
 // Attach user information to all views
 app.use(attachUser);
 
@@ -129,6 +137,7 @@ app.listen(PORT, () => {
   console.log('===========================================');
   console.log('');
   console.log('Available routes:');
+  console.log('  GET  /health          - Health check');
   console.log('  GET  /              - Single-page portal');
   console.log('  GET  /search/execute - Search action');
   console.log('  GET  /privacy       - Redirects to #privacy section');
