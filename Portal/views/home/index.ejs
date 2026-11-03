@@ -42,6 +42,21 @@
   <% if (secret) { %>
   <section class="result-panel success" aria-live="polite">
     <h3>Credential Found</h3>
+    <% if (versions && versions.length > 0) { %>
+    <div class="version-history">
+      <label for="secret-version">Secret version</label>
+      <select id="secret-version" onchange="if (this.value) window.location.href = this.value;">
+        <% versions.forEach((version) => { %>
+        <option
+          value="/search/execute?searchValue=<%= encodeURIComponent(searchValue) %>&version=<%= encodeURIComponent(version.version) %>"
+          <%= version.version === secret.secretVersion ? 'selected' : '' %>
+        >
+          <%= version.version === secret.secretVersion ? 'Current selection' : version.updatedOn %>
+        </option>
+        <% }); %>
+      </select>
+    </div>
+    <% } %>
     <table class="table table-borderless credential-table">
       <tr>
         <th scope="row">Computer name</th>
@@ -62,6 +77,10 @@
       <tr>
         <th scope="row">Last update</th>
         <td><%= secret.secretDate %></td>
+      </tr>
+      <tr>
+        <th scope="row">Version</th>
+        <td><%= secret.secretVersion %></td>
       </tr>
     </table>
   </section>

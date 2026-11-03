@@ -20,6 +20,7 @@ router.get('/', (req: Request, res: Response) => {
     result: null,
     secret: null,
     searchValue: '',
+    versions: [],
   });
 });
 
@@ -49,11 +50,31 @@ router.get('/search/execute', async (req: Request, res: Response) => {
   }
 
   const trimmedSearchValue = searchValue.trim();
+  const requestedVersion = typeof req.query.version === 'string'
+    ? req.query.version
+    : undefined;
 
   try {
-    const secret = await KeyVaultSecret.getComputerAsync(
+    const versions = await KeyVaultSecret.getVersionsAsync(
       config.keyVault.uri,
       trimmedSearchValue
+    );
+
+    if (requestedVersion && !versions.some((version) => version.version === requestedVersion)) {
+      return res.render('home/index', {
+        title: 'CloudLAPS Portal',
+        layout: 'layouts/main',
+        result: 'Failed',
+        secret: null,
+        searchValue: trimmedSearchValue,
+        versions,
+      });
+    }
+
+    const secret = await KeyVaultSecret.getComputerAsync(
+      config.keyVault.uri,
+      trimmedSearchValue,
+      requestedVersion
     );
 
     if (secret) {
@@ -84,6 +105,7 @@ router.get('/search/execute', async (req: Request, res: Response) => {
         result: 'Success',
         secret: secret,
         searchValue: trimmedSearchValue,
+        versions,
       });
     }
 
@@ -93,6 +115,7 @@ router.get('/search/execute', async (req: Request, res: Response) => {
       result: 'Failed',
       secret: null,
       searchValue: trimmedSearchValue,
+      versions,
     });
   } catch (error) {
     console.error('Search error:', error);
@@ -103,6 +126,7 @@ router.get('/search/execute', async (req: Request, res: Response) => {
       result: 'Failed',
       secret: null,
       searchValue: trimmedSearchValue,
+      versions: [],
     });
   }
 });
